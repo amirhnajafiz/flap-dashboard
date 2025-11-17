@@ -265,8 +265,16 @@ npm-debug.log
 yarn-error.log
 
 # End of https://www.toptal.com/developers/gitignore/api/python,nwjs,vuejs,c
+
 .vscode/
-.DS_Store/
 .DS_Store
 .idea
 node_modules/
+
+logs/
+myven/
+old/
+traces/
+datasets/
+counts.txt
+logs.txt
