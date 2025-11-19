@@ -31,7 +31,7 @@ def load_events(jsonl_path):
     return events
 
 
-def build_pairs(events):
+def build_pairs(events, merge_threshold_s=1.0):
     """
     Convert ENTER/EXIT events into intervals.
       ENTER → start_ts
@@ -53,15 +53,33 @@ def build_pairs(events):
             start = stack.pop(key, None)
             if start:
                 end = ev["ts"]
-                mid = start + (end - start) / 2
                 intervals.append({
                     "start": start,
                     "end": end,
-                    "midpoint": mid,
-                    "fname": fname
+                    "fname": fname,
+                    "tid": ev["tid"],
+                    "fd": fd
                 })
 
-    return intervals
+    # Sort intervals by key and start time
+    intervals.sort(key=lambda x: (x["tid"], x["fd"], x["fname"], x["start"]))
+
+    # Merge close intervals
+    merged = []
+    for interval in intervals:
+        if merged:
+            last = merged[-1]
+            same_key = (last["tid"], last["fd"], last["fname"]) == (interval["tid"], interval["fd"], interval["fname"])
+            close = (interval["start"] - last["end"]).total_seconds() < merge_threshold_s
+            if same_key and close:
+                # extend the previous interval
+                last["end"] = max(last["end"], interval["end"])
+                last["midpoint"] = last["start"] + (last["end"] - last["start"]) / 2
+                continue
+        interval["midpoint"] = interval["start"] + (interval["end"] - interval["start"]) / 2
+        merged.append(interval)
+
+    return merged
 
 
 def main():
@@ -104,19 +122,64 @@ def main():
         title=f"Timeline for {proc} / {operand}"
     )
 
-    # Flip y-axis
-    fig.update_yaxes(tickformat=".9f")
+    # -------------------------
+    #  BEAUTIFY TIMELINE LINES
+    # -------------------------
 
-    # Add marker points for midpoints (to know where to zoom)
+    # Make lines thick & bright
+    fig.update_traces(
+        marker=dict(color="rgba(0,0,0,1)"),  # dark solid line
+        base=dict(width=8)                   # thicker
+    )
+
+    # -------------------------
+    #  MIDPOINT MARKERS (RED)
+    # -------------------------
+
     fig.add_scatter(
         x=df["midpoint"],
         y=df["fname"],
         mode="markers",
-        marker=dict(size=6, opacity=0.4),
-        name="activity"
+        marker=dict(
+            size=10,
+            opacity=0.25,
+            color="red"
+        ),
+        name="midpoint"
     )
 
-    # Sliding time window
+    # -------------------------
+    #  START + END MARKERS (GREEN)
+    # -------------------------
+
+    fig.add_scatter(
+        x=df["start"],
+        y=df["fname"],
+        mode="markers",
+        marker=dict(
+            size=12,
+            opacity=0.4,
+            color="green"
+        ),
+        name="start"
+    )
+
+    fig.add_scatter(
+        x=df["end"],
+        y=df["fname"],
+        mode="markers",
+        marker=dict(
+            size=12,
+            opacity=0.4,
+            color="green"
+        ),
+        name="end"
+    )
+
+    # Flip y-axis
+    fig.update_yaxes(tickformat=".9f")
+
+    # Sliding window
     fig.update_xaxes(rangeslider_visible=True)
 
     fig.show()
