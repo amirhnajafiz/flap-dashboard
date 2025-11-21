@@ -6,7 +6,7 @@ import plotly.express as px
 
 LOGS = "logs/procs"
 PROC = "vllm"
-OPRD = "read"
+OPRD = ["read", "write", "mmap"]
 
 def load_logs(path):
     for line in open(path):
@@ -41,7 +41,7 @@ def pair_events(path):
 
     return pd.DataFrame(rows)
 
-def plot_file_distribution(df, top_n=30):
+def plot_file_distribution(df, top_n=100):
     """
     df must contain:
         - fname
@@ -78,7 +78,7 @@ def plot_file_distribution(df, top_n=30):
         y="count",
         color="operand",
         barmode="group",
-        title=f"Top {top_n} Most Accessed Files by Operand",
+        title=f"Top {top_n} Most Accessed Files by Operands {', '.join(OPRD)}",
     )
 
     # Make labels readable
@@ -95,7 +95,12 @@ def plot_file_distribution(df, top_n=30):
 
 
 def main():
-    df = pair_events(f"{LOGS}/{PROC}/{OPRD}.jsonl")
+    all_data = []
+    for op in OPRD:
+        data = pair_events(f"{LOGS}/{PROC}/{op}.jsonl")
+        all_data.append(data)
+    
+    df = pd.concat(all_data, ignore_index=True)
     plot_file_distribution(df)
 
 if __name__ == "__main__":

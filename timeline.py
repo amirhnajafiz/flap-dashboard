@@ -6,7 +6,7 @@ import plotly.express as px
 
 LOGS = "logs/procs"
 PROC = "vllm"
-OPRD = "mmap"
+OPRD = ["mmap", "read", "write"]
 
 MIN_VISIBLE_US = 1000000     # minimum visual width (adjust as needed)
 
@@ -85,7 +85,7 @@ def plot_timeline(df, events_df):
         x_end="end_visual",   # <-- shown visually
         y="operand",
         hover_data={"hover": True},
-        title=f"Timeline of File Operations {PROC}",
+        title=f"Timeline of File Operations {PROC} : {', '.join(OPRD)}",
     )
 
     # Make all bars yellow
@@ -94,32 +94,38 @@ def plot_timeline(df, events_df):
     fig.update_yaxes(title="Operand")
     fig.update_xaxes(title="Time")
 
-    for _, row in events_df.iterrows():
+    for index, row in events_df.iterrows():
         ts = row["timestamp"]
         label = row["event"]
 
         fig.add_vline(
             x=ts,
-            line_width=2,
+            line_width=1,
             line_dash="dash",
             line_color="red",
         )
 
         fig.add_annotation(
             x=ts,
-            y=1.02,
+            y=1.02 if index % 2 == 0 else 1.03,
             xref="x",
             yref="paper",
             showarrow=False,
             text=label,
-            font=dict(size=10),
+            font=dict(size=10)
         )
     
     fig.show()
 
 
 def main():
-    df = pair_events(f'{LOGS}/{PROC}/{OPRD}.jsonl')
+    all_data = []
+    for op in OPRD:
+        data = pair_events(f"{LOGS}/{PROC}/{op}.jsonl")
+        all_data.append(data)
+    
+    df = pd.concat(all_data, ignore_index=True)
+
     events_df = load_events("events.logs")
     plot_timeline(df, events_df)
 
