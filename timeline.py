@@ -7,6 +7,7 @@ import plotly.express as px
 LOGS = "logs/procs"
 PROC = "vllm"
 OPRD = ["mmap", "read", "write"]
+KEYWORD = "/root"
 
 MIN_VISIBLE_US = 1000000     # minimum visual width (adjust as needed)
 
@@ -43,13 +44,14 @@ def pair_events(path):
 
         if ev["event_type"] == "EXIT" and key in pending:
             en = pending.pop(key)
-            rows.append({
-                "operand": op,
-                "fname": ev["details"]["fname"],
-                "start": en["timestamp"],
-                "end": ev["timestamp"],
-                "latency_us": int(ev["details"]["latency"]),
-            })
+            if KEYWORD in ev["details"]["fname"]:
+                rows.append({
+                    "operand": op,
+                    "fname": ev["details"]["fname"],
+                    "start": en["timestamp"],
+                    "end": ev["timestamp"],
+                    "latency_us": int(ev["details"]["latency"]),
+                })
 
     return pd.DataFrame(rows)
 
@@ -84,12 +86,10 @@ def plot_timeline(df, events_df):
         x_start="start",
         x_end="end_visual",   # <-- shown visually
         y="operand",
+        color="operand",
         hover_data={"hover": True},
         title=f"Timeline of File Operations {PROC} : {', '.join(OPRD)}",
     )
-
-    # Make all bars yellow
-    fig.update_traces(marker_color="blue")
 
     fig.update_yaxes(title="Operand")
     fig.update_xaxes(title="Time")

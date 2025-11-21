@@ -9,6 +9,7 @@ from astropy.stats import bayesian_blocks
 LOGS = "logs/procs"
 PROC = "vllm"
 OPRD = ["mmap", "read", "write"]
+KEYWORD = "/root"
 
 def load_logs(path):
     for line in open(path):
@@ -27,10 +28,11 @@ def pair_events(path, operand):
 
         if ev["event_type"] == "EXIT" and key in pending:
             _ = pending.pop(key)
-            rows.append({
-                "latency_ms": int(ev["details"]["latency"]) / 1_000_000,
-                "operand": operand
-            })
+            if KEYWORD in ev["details"]["fname"]:
+                rows.append({
+                    "latency_ms": int(ev["details"]["latency"]) / 1_000_000,
+                    "operand": operand
+                })
 
     return pd.DataFrame(rows)
 

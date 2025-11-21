@@ -7,6 +7,7 @@ import plotly.express as px
 LOGS = "logs/procs"
 PROC = "vllm"
 OPRD = ["read", "write", "mmap"]
+KEYWORD = "/root"
 
 def load_logs(path):
     for line in open(path):
@@ -31,13 +32,14 @@ def pair_events(path):
             continue
 
         if ev["event_type"] == "EXIT" and key in pending:
-            enter = pending.pop(key)
+            _ = pending.pop(key)
 
-            rows.append({
-                "fname": ev["details"]["fname"],
-                "operand": ev["operand"],
-                "latency_us": int(ev["details"]["latency"]) / 1000.0,  # convert ns → µs
-            })
+            if KEYWORD in ev["details"]["fname"]:
+                rows.append({
+                    "fname": ev["details"]["fname"],
+                    "operand": ev["operand"],
+                    "latency_us": int(ev["details"]["latency"]) / 1000.0,  # convert ns → µs
+                })
 
     return pd.DataFrame(rows)
 
