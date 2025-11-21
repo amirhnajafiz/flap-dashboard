@@ -280,3 +280,4 @@ datasets/
 counts.txt
 logs.txt
 vllm-logs.txt
+events.logs
