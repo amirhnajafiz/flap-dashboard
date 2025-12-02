@@ -5,7 +5,7 @@ from src.parsers import Parser
 from src.rexfsm import match_string, parse_into_object
 
 
-class EventParser(Parser):
+class MetaParser(Parser):
     def parse(self) -> bool:
         with open(os.path.join(self.dir_path, "meta_logs.txt"), "r") as file:
             for line in file:

@@ -8,14 +8,22 @@ import sys
 
 
 from src.parsers.event_parser import EventParser
+from src.parsers.io_parser import IOParser
+from src.parsers.meta_parser import MetaParser
 from src.time_reference import import_references
 
 
 def main(dir_path: str):
     ref_mono, ref_wall = import_references(dir_path=dir_path)
 
-    p = EventParser(dir_path, ref_mono, ref_wall)
-    p.parse()
+    parsers = [
+        EventParser(dir_path, ref_mono, ref_wall),
+        IOParser(dir_path, ref_mono, ref_wall),
+        MetaParser(dir_path, ref_mono, ref_wall)
+    ]
+
+    for p in parsers:
+        p.parse()
 
 
 if __name__ == "__main__":
