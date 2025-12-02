@@ -62,7 +62,7 @@ class Reader(ABC):
 
         # extract the meta output
         meta = {
-            "time": match.group("time"),
+            "timestamp": match.group("time"),
             "datetime": self.convert_monotonic_time_to_datetime(
                 input=float(match.group("time"))
             ).isoformat(" "),

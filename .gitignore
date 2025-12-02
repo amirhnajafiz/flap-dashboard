@@ -271,6 +271,7 @@ yarn-error.log
 .idea
 node_modules/
 
+data/
 logs/
 myven/
 myvenv/
