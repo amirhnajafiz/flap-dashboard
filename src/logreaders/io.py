@@ -7,7 +7,7 @@ from src.rexfsm import match_string, parse_into_object
 
 class IOReader(Reader):
     def start(self) -> bool:
-        with open(os.path.join(self.dir_path, "meta_logs.txt"), "r") as file:
+        with open(os.path.join(self.dir_path, "io_logs.txt"), "r") as file:
             for line in file:
                 m = match_string(line)
                 if not m:
