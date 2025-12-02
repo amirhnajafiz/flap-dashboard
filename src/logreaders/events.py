@@ -1,12 +1,12 @@
 import json
 import os
 
-from src.parsers import Parser
+from src.logreaders import Reader
 from src.rexfsm import match_string, parse_into_object
 
 
-class EventParser(Parser):
-    def parse(self) -> bool:
+class EventsReader(Reader):
+    def start(self) -> bool:
         with open(os.path.join(self.dir_path, "meta_logs.txt"), "r") as file:
             for line in file:
                 m = match_string(line)
