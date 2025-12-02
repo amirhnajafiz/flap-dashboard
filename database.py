@@ -23,7 +23,7 @@ def main(dir_path: str):
     ]
 
     for p in parsers:
-        p.parse()
+        p.start()
 
 
 if __name__ == "__main__":
