@@ -35,15 +35,8 @@ class Database:
     def insert_record(self, batch: list):
         conn = self.connection()
         try:
-            conn.executemany(
-                """
-                INSERT INTO logs (
-                    timestamp, pid, tid, proc, event_type, event_name, addr
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
-                """,
-                batch,
-            )
+            conn.executemany(queries.INSERT_LOG_RECORD, batch)
             conn.commit()
         except Error as e:
-            logging.error(f"failed to create tables {e}")
+            logging.error(f"failed to insert records {e}")
             sys.exit(1)

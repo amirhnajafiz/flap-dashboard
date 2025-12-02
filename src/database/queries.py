@@ -13,3 +13,9 @@ CREATE TABLE IF NOT EXISTS logs (
     parameters TEXT
 );
 """
+
+INSERT_LOG_RECORD = """
+INSERT INTO logs (
+    en_timestamp, en_datetime, ex_timestamp, ex_datetime, pid, tid, proc, event_name, event_type, parameters
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+"""
