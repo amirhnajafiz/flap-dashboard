@@ -1,12 +1,6 @@
-# get the logs folder
-# read the time references
-# open each of three files
-# read each line by line
-# convert raw time to datetime
-# merge enter and exits
 import sys
 
-
+from src.database import Database
 from src.logreaders.events import EventsReader
 from src.logreaders.io import IOReader
 from src.logreaders.meta import MetaReader
@@ -14,15 +8,22 @@ from utils.files import import_time_references
 
 
 def main(dir_path: str):
+    # read the timestamp references
     ref_mono, ref_wall = import_time_references(dir_path=dir_path)
 
-    parsers = [
-        EventsReader(dir_path, ref_mono, ref_wall),
-        IOReader(dir_path, ref_mono, ref_wall),
-        MetaReader(dir_path, ref_mono, ref_wall)
+    # open a database connection and init tables
+    db = Database(db_path="data/data.db")
+    db.init_tables()
+
+    # create reader instances
+    readers = [
+        EventsReader(dir_path, ref_mono, ref_wall, db),
+        IOReader(dir_path, ref_mono, ref_wall, db),
+        MetaReader(dir_path, ref_mono, ref_wall, db),
     ]
 
-    for p in parsers:
+    # start readers one by one
+    for p in readers:
         p.start()
 
 

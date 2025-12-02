@@ -2,6 +2,8 @@ import datetime
 import re
 from abc import ABC
 
+from src.database import Database
+
 
 class Reader(ABC):
     """Reader is an abstract class for all types of log readers.
@@ -9,7 +11,7 @@ class Reader(ABC):
     of log file, parse it line by line, and insert it into the database.
     """
 
-    def __init__(self, dir_path: str, mono: float, wall: float):
+    def __init__(self, dir_path: str, mono: float, wall: float, db: Database):
         """The constructor method accepts parameters needed for a general
         log reader instance.
 
@@ -18,6 +20,7 @@ class Reader(ABC):
         :param reference wall: real-world timestamp that serves as the anchor for converting other timestamps
         """
         self.dir_path = dir_path
+        self.db = db
 
         self.__ref_mono_ns = mono * 1e9
         self.__ref_wall_ns = wall * 1e9
