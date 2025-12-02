@@ -10,11 +10,11 @@ import sys
 from src.logreaders.events import EventsReader
 from src.logreaders.io import IOReader
 from src.logreaders.meta import MetaReader
-from src.time_reference import import_references
+from utils.files import import_time_references
 
 
 def main(dir_path: str):
-    ref_mono, ref_wall = import_references(dir_path=dir_path)
+    ref_mono, ref_wall = import_time_references(dir_path=dir_path)
 
     parsers = [
         EventsReader(dir_path, ref_mono, ref_wall),
