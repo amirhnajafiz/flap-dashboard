@@ -1,15 +1,17 @@
 from flask import Flask
+import os
 
 from src.database import Database
 from src.api.routes import Routes
+import src.api.views as views
 
 
 class Router:
-    def __init__(self, debug: bool, port: int, db: Database):
+    def __init__(self, debug: bool, port: int, db: Database, base_dir: str):
         self.__app = Flask(
             __name__,
-            static_folder="templates/static",
-            template_folder="templates/pages",
+            static_folder=os.path.join(base_dir, "static"),
+            template_folder=os.path.join(base_dir, "pages"),
         )
         self.__app.config["JSON_SORT_KEYS"] = False
         self.__routes = Routes(db)
@@ -18,6 +20,7 @@ class Router:
 
     def listen_and_serve(self):
         # define routes
+        self.__app.add_url_rule('/', 'index', views.index)
         self.__app.add_url_rule(
             "/api/events", "list_events", self.__routes.list_events, methods=["GET"]
         )
