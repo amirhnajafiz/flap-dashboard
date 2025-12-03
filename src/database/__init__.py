@@ -7,15 +7,21 @@ import src.database.queries as queries
 
 
 class Database:
+    """Database module connects to the sqlite database and provides the
+    interface for data management.
+    """
+
     def __init__(self, db_path: str):
+        """Database constructor.
+
+        :param db_path: Path to sqlite file.
+        """
         self.__db_path = db_path
         self.__conn = None
-        self.__query_map = {
-            "meta": queries.INSERT_META_LOG_RECORD,
-            "io": queries.INSERT_IO_LOG_RECORD
-        }
 
     def connection(self) -> sqlite3.Connection:
+        """Connection returns a sqlite3.Connection to sqlite database."""
+
         if self.__conn is not None:
             return self.__conn
 
@@ -28,6 +34,7 @@ class Database:
         return self.__conn
 
     def init_tables(self):
+        """Init tables into the sqlite database."""
         try:
             cursor = self.connection().cursor()
             cursor.execute(queries.CREATE_META_LOGS_TABLE)
@@ -37,9 +44,14 @@ class Database:
             logging.error(f"failed to create tables {e}")
             sys.exit(1)
 
-    def insert_records(self, batch: list, query_type: str):
+    def insert_records(self, batch: list, query: str):
+        """Insert records as batch.
+
+        :param batch: list of objects
+        :param query: query to run
+        """
+
         conn = self.connection()
-        query = self.__query_map[query_type]
 
         try:
             conn.executemany(query, batch)

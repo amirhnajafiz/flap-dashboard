@@ -1,6 +1,7 @@
 import os
 
 from src.logreaders import Reader
+import src.database.queries as queries
 
 
 class IOReader(Reader):
@@ -50,8 +51,8 @@ class IOReader(Reader):
                     )
 
                 if len(batch) > limit:
-                    self.db.insert_records(batch, "io")
+                    self.db.insert_records(batch, queries.INSERT_IO_LOG_RECORD)
                     batch = []
 
         if len(batch) > 0:
-            self.db.insert_records(batch, "io")
+            self.db.insert_records(batch, queries.INSERT_IO_LOG_RECORD)
