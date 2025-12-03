@@ -1,21 +1,12 @@
-import sqlite3
-
+from src.api.router import Router
 from src.database import Database
-import src.database.queries as queries
 
 
 def main():
     db = Database("data/data.db")
+    router = Router(debug=False, port=5050, db=db)
+    router.listen_and_serve()
 
-    conn = db.connection()
-    conn.row_factory = sqlite3.Row
-    cur = conn.cursor()
-    cur.execute(queries.GET_IO_EVENTS)
-    rows = cur.fetchall()
-    conn.close()
-
-    return [dict(row) for row in rows]
 
 if __name__ == "__main__":
-    rows = main()
-    print(rows[0])
+    main()
