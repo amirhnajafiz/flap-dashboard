@@ -270,6 +270,7 @@ yarn-error.log
 .DS_Store
 .idea
 node_modules/
+*.code-workspace
 
 data/
 logs/
