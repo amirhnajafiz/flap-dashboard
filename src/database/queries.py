@@ -52,7 +52,9 @@ WITH io AS (
         event_name,
         fd,
         en_timestamp,
-        ex_timestamp
+        ex_timestamp,
+        en_datetime,
+        ex_datetime
     FROM io_logs
 ),
 cand AS (
@@ -87,6 +89,8 @@ SELECT
     io.fd,
     io.en_timestamp,
     io.ex_timestamp,
+    io.en_datetime,
+    io.ex_datetime,
     COALESCE(best.fname, 'unknown') AS fname
 FROM io
 LEFT JOIN best ON best.io_id = io.id
