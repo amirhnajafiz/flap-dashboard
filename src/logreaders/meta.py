@@ -17,7 +17,7 @@ class MetaReader(Reader):
                     continue
 
                 # convert it into an object
-                obj = self.parse_into_object(m, self.mono, self.wall)
+                obj = self.parse_match_into_dictionary(m)
 
                 # form the key
                 key = (obj["pid"], obj["tid"])

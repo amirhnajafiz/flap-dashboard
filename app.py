@@ -4,7 +4,7 @@ from src.database import Database
 # from src.logreaders.events import EventsReader
 # from src.logreaders.io import IOReader
 from src.logreaders.meta import MetaReader
-from utils.files import import_time_references
+from src.utils.files import import_time_references
 
 
 def main(dir_path: str):
