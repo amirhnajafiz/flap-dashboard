@@ -71,6 +71,15 @@ class Reader(ABC):
         :param match: a not-none match object
         :raturn dict: python dictionary (meta: map[stirng]string, status: EN|EX, operand, spec: map[string]string)
         """
+
+        # parse spec field into dictionary
+        spec_str = match.group("spec")
+        spec = {}
+        if spec_str.strip():
+            for item in spec_str.split():
+                k, v = item.split("=", 1)
+                spec[k] = v
+
         return {
             "timestamp": match.group("time"),
             "datetime": self.convert_monotonic_time_to_datetime(
@@ -81,7 +90,7 @@ class Reader(ABC):
             "proc": match.group("proc"),
             "status": match.group("status"),
             "operand": match.group("operand"),
-            "spec": match.group("spec"),
+            "spec": spec,
         }
 
     @classmethod

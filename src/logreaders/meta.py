@@ -44,14 +44,14 @@ class MetaReader(Reader):
                             obj["tid"],
                             obj["proc"],
                             obj["operand"],
-                            "meta",
-                            en_obj["spec"] + " " + obj["spec"],
+                            en_obj["spec"].get("fname", ""),
+                            obj["spec"].get("ret", -1),
                         )
                     )
 
                 if len(batch) > limit:
-                    self.db.insert_records(batch)
+                    self.db.insert_records(batch, "meta")
                     batch = []
 
         if len(batch) > 0:
-            self.db.insert_records(batch)
+            self.db.insert_records(batch, "meta")

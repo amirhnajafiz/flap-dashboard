@@ -44,14 +44,14 @@ class IOReader(Reader):
                             obj["tid"],
                             obj["proc"],
                             obj["operand"],
-                            "io",
-                            en_obj["spec"] + " " + obj["spec"],
+                            en_obj["spec"].get("fd", -1),
+                            obj["spec"].get("ret", -1),
                         )
                     )
 
                 if len(batch) > limit:
-                    self.db.insert_records(batch)
+                    self.db.insert_records(batch, "io")
                     batch = []
 
         if len(batch) > 0:
-            self.db.insert_records(batch)
+            self.db.insert_records(batch, "io")
