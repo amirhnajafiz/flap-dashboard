@@ -32,7 +32,7 @@ class Database:
             logging.error(f"failed to create tables {e}")
             sys.exit(1)
 
-    def insert_record(self, batch: list):
+    def insert_records(self, batch: list):
         conn = self.connection()
         try:
             conn.executemany(queries.INSERT_LOG_RECORD, batch)

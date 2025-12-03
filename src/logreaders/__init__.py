@@ -62,9 +62,7 @@ class Reader(ABC):
         :param match: a not-none match object
         :raturn dict: python dictionary (meta: map[stirng]string, status: EN|EX, operand, spec: map[string]string)
         """
-
-        # extract the meta output
-        meta = {
+        return {
             "timestamp": match.group("time"),
             "datetime": self.convert_monotonic_time_to_datetime(
                 input=float(match.group("time"))
@@ -72,21 +70,10 @@ class Reader(ABC):
             "pid": match.group("pid"),
             "tid": match.group("tid"),
             "proc": match.group("proc"),
+            "status": match.group("status"),
+            "operand": match.group("operand"),
+            "spec": match.group("spec")
         }
-
-        # extract the status and operand
-        status = match.group("status")
-        operand = match.group("operand")
-
-        # extract spec key-values
-        spec_str = match.group("spec")
-        spec = {}
-        if spec_str.strip():
-            for item in spec_str.split():
-                k, v = item.split("=", 1)
-                spec[k] = v
-
-        return {"meta": meta, "status": status, "operand": operand, "spec": spec}
 
     @classmethod
     def start(self) -> tuple[bool, str]:

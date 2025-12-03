@@ -1,4 +1,3 @@
-import json
 import os
 
 from src.logreaders import Reader
@@ -7,6 +6,9 @@ from src.logreaders import Reader
 class MetaReader(Reader):
     def start(self) -> bool:
         hashmap = {}
+        batch = []
+        limit = 20
+
         with open(os.path.join(self.dir_path, "meta_logs.txt"), "r") as file:
             for line in file:
                 # read the line
@@ -18,11 +20,30 @@ class MetaReader(Reader):
                 obj = self.parse_into_object(m, self.mono, self.wall)
 
                 # form the key
-                key = (obj{""})
+                key = (obj["pid"], obj["tid"])
 
                 if obj["status"] == "EN":
-                    hashmap[]
-                else:
+                    hashmap[key] = obj
+                elif key in hashmap:
+                        en_obj = hashmap[key]
+                        del(hashmap[key])
 
+                        batch.append((
+                            int(en_obj["timestamp"]),
+                            en_obj["datetime"],
+                            int(obj["timestamp"]),
+                            obj["datetime"],
+                            obj["pid"],
+                            obj["tid"],
+                            obj["proc"],
+                            obj["operand"],
+                            "meta",
+                            en_obj["spec"] + " " + obj["spec"]
+                        ))
 
-                print(json.dumps(obj, indent=4))
+                if len(batch) > limit:
+                    self.db.insert_records(batch)
+                    batch = []
+        
+        if len(batch) > 0:
+            self.db.insert_records(batch)
