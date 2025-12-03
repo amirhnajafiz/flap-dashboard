@@ -1,8 +1,7 @@
 import sys
 
 from src.database import Database
-# from src.logreaders.events import EventsReader
-# from src.logreaders.io import IOReader
+from src.logreaders.io import IOReader
 from src.logreaders.meta import MetaReader
 from src.utils.files import import_time_references
 
@@ -18,6 +17,7 @@ def main(dir_path: str):
     # create reader instances
     readers = [
         MetaReader(dir_path, ref_mono, ref_wall, db),
+        IOReader(dir_path, ref_mono, ref_wall, db),
     ]
 
     # start readers one by one

@@ -11,15 +11,24 @@ class Reader(ABC):
     of log file, parse it line by line, and insert it into the database.
     """
 
-    def __init__(self, dir_path: str, mono: float, wall: float, db: Database):
+    def __init__(
+        self,
+        dir_path: str,
+        mono: float,
+        wall: float,
+        db: Database,
+        batch_size: int = 20,
+    ):
         """The constructor method accepts parameters needed for a general
         log reader instance.
 
         :param dir_path: each log reader needs to know where to look for its log file
         :param reference mono: timestamp based on a monotonic clock, offset by a known “reference” point
         :param reference wall: real-world timestamp that serves as the anchor for converting other timestamps
+        :param batch_size: the batch size to insert log records
         """
         self.dir_path = dir_path
+        self.batch_size = batch_size
         self.db = db
 
         self.__ref_mono_ns = mono * 1e9
@@ -72,7 +81,7 @@ class Reader(ABC):
             "proc": match.group("proc"),
             "status": match.group("status"),
             "operand": match.group("operand"),
-            "spec": match.group("spec")
+            "spec": match.group("spec"),
         }
 
     @classmethod
