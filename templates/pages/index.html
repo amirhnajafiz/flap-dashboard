@@ -1,114 +1,24 @@
 <!DOCTYPE html>
-<meta charset="utf-8">
-<body>
-<div id="chart"></div>
-
-<script src="https://d3js.org/d3.v7.min.js"></script>
-<script>
-const margin = {top: 20, right: 100, bottom: 40, left: 80},
-      width  = 900 - margin.left - margin.right,
-      height = 400 - margin.top - margin.bottom;
-
-const svg = d3.select("#chart")
-  .append("svg")
-    .attr("width",  width  + margin.left + margin.right)
-    .attr("height", height + margin.top  + margin.bottom)
-  .append("g")
-    .attr("transform", `translate(${margin.left},${margin.top})`);
-
-const parseTime = d3.utcParse("%Y-%m-%d %H:%M:%S.%f");
-
-// Light grid lines for y-axis (event names)
-function drawYGridLines(yScale) {
-  svg.append("g")
-    .attr("class", "y-grid")
-    .selectAll("line")
-    .data(yScale.domain())
-    .enter()
-    .append("line")
-      .attr("x1", 0)
-      .attr("x2", width)
-      .attr("y1", d => yScale(d) + yScale.bandwidth()/2)
-      .attr("y2", d => yScale(d) + yScale.bandwidth()/2)
-      .attr("stroke", "#ddd")
-      .attr("stroke-width", 1)
-      .attr("stroke-opacity", 0.2)
-      .attr("shape-rendering", "crispEdges");
-}
-
-fetch('/api/events')
-  .then(r => r.json())
-  .then(rawData => {
-    const data = rawData.map(d => ({
-      ...d,
-      en_date: parseTime(d.en_datetime),
-      ex_date: parseTime(d.ex_datetime)
-    })).filter(d => d.en_date && d.ex_date);
-
-    const events = Array.from(
-      d3.group(data, d => d.event_name),
-      ([eventName, eventData]) => ({eventName, eventData})
-    );
-
-    const allTimes = data.flatMap(d => [d.en_date, d.ex_date]);
-    const x = d3.scaleTime()
-      .domain(d3.extent(allTimes))
-      .range([0, width]);
-
-    const y = d3.scaleBand()
-      .domain(events.map(d => d.eventName))
-      .range([0, height])
-      .padding(0.1);
-
-    // Draw light horizontal grid lines for y-axis categories
-    drawYGridLines(y);
-
-    // Axes
-    svg.append("g")
-      .attr("transform", `translate(0,${height})`)
-      .call(d3.axisBottom(x).ticks(10));
-
-    svg.append("g")
-      .call(d3.axisLeft(y));
-
-    const color = d3.scaleOrdinal()
-      .domain(events.map(d => d.eventName))
-      .range(d3.schemeCategory10);
-
-    // Draw event lines - bold
-    events.forEach(event => {
-      const line = d3.line()
-        .x(d => x((d.en_date.getTime() + d.ex_date.getTime()) / 2))
-        .y(() => y(event.eventName) + y.bandwidth()/2)
-        .curve(d3.curveStepAfter);
-
-      svg.append("path")
-        .datum(event.eventData)
-        .attr("fill", "none")
-        .attr("stroke", color(event.eventName))
-        .attr("stroke-width", 3)
-        .attr("d", line)
-        .on("mouseover", function() {
-          d3.select(this).attr("stroke-width", 5);
-        })
-        .on("mouseout", function() {
-          d3.select(this).attr("stroke-width", 3);
-        });
-    });
-
-    // Draw event points - bold
-    svg.selectAll("dots")
-      .data(data)
-      .enter().append("circle")
-        .attr("cx", d => x((d.en_date.getTime() + d.ex_date.getTime()) / 2))
-        .attr("cy", d => y(d.event_name) + y.bandwidth()/2)
-        .attr("r", 4)
-        .attr("fill", d => color(d.event_name))
-        .attr("opacity", 0.8)
-        .append("title")
-          .text(d => `PID: ${d.pid}, TID: ${d.tid}, FD: ${d.fd}\n${d.en_datetime} → ${d.ex_datetime}`);
-  })
-  .catch(err => console.error('Error loading /api/events', err));
-</script>
-</body>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title> FLAP Dashboard </title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <div id="tooltip"
+      style="
+          position: absolute;
+          background: #fff;
+          padding: 6px 10px;
+          border: 1px solid #ccc;
+          border-radius: 6px;
+          font-size: 12px;
+          pointer-events: none;
+          opacity: 0;">
+  </div>
+  </head>
+  <body>
+    <svg id="chart" width="1600" height="800"></svg>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+  </body>
 </html>

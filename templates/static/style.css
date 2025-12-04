@@ -1,0 +1,14 @@
+body {
+    background: #f5f7fa;
+    font-family: sans-serif;
+}
+
+.grid line {
+    stroke: #7c7f81;
+    stroke-opacity: 0.4;
+    shape-rendering: crispEdges;
+}
+
+.grid path {
+    stroke-width: 0;
+}
