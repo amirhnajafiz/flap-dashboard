@@ -77,8 +77,11 @@ class Reader(ABC):
         spec = {}
         if spec_str.strip():
             for item in spec_str.split():
-                k, v = item.split("=", 1)
-                spec[k] = v
+                try:
+                    k, v = item.split("=", 1)
+                    spec[k] = v
+                except ValueError:
+                    continue
 
         return {
             "timestamp": match.group("time"),
