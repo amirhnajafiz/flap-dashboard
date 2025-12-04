@@ -7,23 +7,30 @@ const margin = { top: 40, right: 40, bottom: 40, left: 120 };
 const innerWidth = width - margin.left - margin.right;
 const innerHeight = height - margin.top - margin.bottom;
 
+svg.style("overflow", "hidden");
+
 const g = svg.append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
-function plot(events) {
+function plot(events, rendom_events) {
     const parseTime = d3.utcParse("%Y-%m-%d %H:%M:%S.%f");
     events.forEach(d => {
         d.start = parseTime(d.en_datetime);
         d.end   = parseTime(d.ex_datetime);
     });
 
+    rendom_events.forEach(d => {
+        d.time  = parseTime(d.datetime);
+    });
+
     // scales
     const xScale = d3.scaleTime()
         .domain([
-            d3.min(events, d => d.start),
-            d3.max(events, d => d.end)
+            d3.min([d3.min(events, d => d.start), d3.min(rendom_events, d => d.time)]),
+            d3.max([d3.max(events, d => d.end), d3.max(rendom_events, d => d.time)]),
         ])
-        .range([0, innerWidth]);
+        .range([0, innerWidth])
+        .nice();
 
     const yScale = d3.scaleBand()
         .domain([...new Set(events.map(d => d.event_name))])
@@ -46,6 +53,39 @@ function plot(events) {
     const gy = g.append("g")
         .attr("class", "y-axis")
         .call(yAxis);
+
+    svg.append("text")
+      .attr("class", "title")
+      .attr("text-anchor", "middle")
+      .attr("transform", `translate(${width / 2}, ${margin.top / 2})`)
+      .text("Tracing Time");
+    
+    svg.append("text")
+      .attr("class", "axis-label")
+      .attr("text-anchor", "middle")
+      .attr("transform", `translate(${width / 2}, ${height})`)
+      .text("time");
+
+    svg.append("text")
+      .attr("class", "axis-label")
+      .attr("text-anchor", "middle")
+      .attr("transform", `translate(40, ${height / 2}) rotate(-90)`)
+      .text("operand");
+    
+    // draw sections
+    const sections = g.append("g")
+        .attr("class", "sections");
+    
+    sections.selectAll("line")
+        .data(rendom_events)
+        .enter()
+        .append("line")
+        .attr("x1", d => xScale(d.time))
+        .attr("x2", d => xScale(d.time))
+        .attr("y1", _ => 0)
+        .attr("y2", _ => innerHeight)
+        .attr("stroke", "#e47208ff")
+        .attr("stroke-width", 2)
 
     // draw events
     const lines = g.append("g")
@@ -99,6 +139,10 @@ function plot(events) {
         gx.call(xAxis.scale(zx));
 
         // Update line positions
+        sections.selectAll("line")
+            .attr("x1", d => zx(d.time))
+            .attr("x2", d => zx(d.time));
+
         lines.selectAll("line")
             .attr("x1", d => zx(d.start))
             .attr("x2", d => zx(d.end));
@@ -108,6 +152,6 @@ function plot(events) {
 fetch('/api/events')
   .then(r => r.json())
   .then(rawData => {
-    plot(rawData)
+    plot(rawData, [])
   })
   .catch(err => console.error('Error loading /api/events', err));
