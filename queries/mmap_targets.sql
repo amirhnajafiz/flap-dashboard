@@ -1,6 +1,6 @@
 WITH 
     fdpid AS (
-        SELECT DISTINCT fd, pid, event_name, en_timestamp, ex_timestamp, ret
+        SELECT DISTINCT fd, pid, event_name, en_timestamp, ex_timestamp, ret, en_datetime, ex_datetime, proc
         FROM io_logs 
         WHERE event_name = "mmap" AND fd <> -1
     ),
@@ -18,6 +18,6 @@ WITH
             ) AS fname
         FROM fdpid
     )
-SELECT result.ret, result.fname, COUNT(*) as fcount
+SELECT result.ret, result.fname, result.en_datetime, result.ex_datetime, result.proc
 FROM result
 GROUP BY result.fname;
