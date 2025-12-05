@@ -35,20 +35,24 @@ class MetaReader(Reader):
                     en_obj = hashmap[key]
                     del hashmap[key]
 
-                    batch.append(
-                        (
-                            int(en_obj["timestamp"]),
-                            en_obj["datetime"],
-                            int(obj["timestamp"]),
-                            obj["datetime"],
-                            obj["pid"],
-                            obj["tid"],
-                            obj["proc"],
-                            obj["operand"],
-                            en_obj["spec"].get("fname", ""),
-                            obj["spec"].get("ret", -1),
+                    ret = int(obj["spec"].get("ret", -1))
+
+                    # exclude the negative records
+                    if ret > -1:
+                        batch.append(
+                            (
+                                int(en_obj["timestamp"]),
+                                en_obj["datetime"],
+                                int(obj["timestamp"]),
+                                obj["datetime"],
+                                obj["pid"],
+                                obj["tid"],
+                                obj["proc"],
+                                obj["operand"],
+                                en_obj["spec"].get("fname", "unknown"),
+                                ret
+                            )
                         )
-                    )
 
                 if len(batch) > limit:
                     self.db.insert_records(batch, queries.INSERT_META_LOG_RECORD)

@@ -38,13 +38,9 @@ class Database:
         try:
             cursor = self.connection().cursor()
 
-            # create tables and views
+            # create tables
             cursor.execute(queries.CREATE_META_LOGS_TABLE)
             cursor.execute(queries.CREATE_IO_LOGS_TABLE)
-            cursor.execute(queries.CREATE_IO_VIEW)
-            cursor.execute(queries.CREATE_IO_CAND_VIEW)
-            cursor.execute(queries.CREATE_IO_BEST_VIEW)
-            cursor.execute(queries.CREATE_IO_FNAME_VIEW)
 
             self.connection().commit()
         except Error as e:

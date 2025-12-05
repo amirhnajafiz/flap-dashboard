@@ -1,1 +1,1 @@
-SELECT DISTINCT tid FROM io_logs;
+SELECT SUM(countbytes) FROM io_logs;

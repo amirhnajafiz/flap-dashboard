@@ -35,20 +35,26 @@ class IOReader(Reader):
                     en_obj = hashmap[key]
                     del hashmap[key]
 
-                    batch.append(
-                        (
-                            int(en_obj["timestamp"]),
-                            en_obj["datetime"],
-                            int(obj["timestamp"]),
-                            obj["datetime"],
-                            obj["pid"],
-                            obj["tid"],
-                            obj["proc"],
-                            obj["operand"],
-                            en_obj["spec"].get("fd", -1),
-                            obj["spec"].get("ret", -1),
+                    fd = int(en_obj["spec"].get("fd", -1))
+                    ret = int(obj["spec"].get("ret", -1))
+
+                    # exclude the negative records
+                    if fd > -1 and ret > -1:
+                        batch.append(
+                            (
+                                int(en_obj["timestamp"]),
+                                en_obj["datetime"],
+                                int(obj["timestamp"]),
+                                obj["datetime"],
+                                obj["pid"],
+                                obj["tid"],
+                                obj["proc"],
+                                obj["operand"],
+                                fd,
+                                ret,
+                                int(en_obj["spec"].get("count", 0))
+                            )
                         )
-                    )
 
                 if len(batch) > limit:
                     self.db.insert_records(batch, queries.INSERT_IO_LOG_RECORD)
