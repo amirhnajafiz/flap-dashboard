@@ -8,7 +8,7 @@ from src.database import Database
 
 
 def main():
-    # load config values
+    # load config values from config file
     cfg = load_config()
 
     # tune the logger
@@ -22,6 +22,7 @@ def main():
     db = Database(cfg["database"]["path"])
 
     # call bootstrap function
+    logging.info("calling bootstrap")
     bootstrap(
         db,
         cfg["bootstrap"]["logs_path"],
@@ -32,7 +33,7 @@ def main():
     # find the base dir for templates
     base_dir = os.path.join(os.path.dirname(__file__), "templates")
 
-    logging.info("starting router")
+    logging.info("starting flask router")
 
     # create a new router and start
     router = Router(

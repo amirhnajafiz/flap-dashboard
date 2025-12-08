@@ -22,33 +22,38 @@ def bootstrap(
     if not enable_import:
         return
 
-    # read the timestamp references
-    ref_mono, ref_wall = import_time_references(dir_path=dir_path)
-
-    logging.info("read references")
-
     # init tables
+    logging.info("creating tables")
     db.init_tables()
+    logging.info("done creating tables")
 
-    logging.info("create tables")
+    # run readers
+    __process_readers(db, dir_path, batch_size)
+
+    # update fname values
+    logging.info("updating file names")
+    db.raw_execute(UPDATE_FNAME_VALUES)
+    logging.info("done updating file names")
+
+
+def __process_readers(db: Database, dp: str, bs: int):
+    # read the timestamp references
+    logging.info("reading references")
+    ref_mono, ref_wall = import_time_references(dir_path=dp)
+    logging.info("done reading references")
 
     # create reader instances
     readers = [
-        MetaReader(dir_path, ref_mono, ref_wall, db, batch_size),
-        IOReader(dir_path, ref_mono, ref_wall, db, batch_size),
+        MetaReader(dp, ref_mono, ref_wall, db, bs),
+        IOReader(dp, ref_mono, ref_wall, db, bs),
     ]
 
-    logging.info("running readers")
+    logging.info("running log readers")
 
     # start readers one by one
     for p in readers:
-        logging.info(f"starting reader: {p.name()}")
+        logging.info(f"starting log reader: {p.name()}")
         p.start()
-        logging.info(f"stopping reader: {p.name()}")
+        logging.info(f"stopping log reader: {p.name()}")
 
-    logging.info("read done")
-
-    # update fname values
-    db.raw_execute(UPDATE_FNAME_VALUES)
-
-    logging.info("fname values updated")
+    logging.info("done running log readers")
