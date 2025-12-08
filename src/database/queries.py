@@ -27,7 +27,8 @@ CREATE TABLE IF NOT EXISTS io_logs (
     event_name TEXT,
     fd INT,
     ret INT,
-    countbytes INT
+    countbytes INT,
+    fname TEXT
 );
 """
 
