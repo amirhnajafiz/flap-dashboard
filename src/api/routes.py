@@ -16,6 +16,7 @@ class Routes:
         cur = conn.cursor()
         cur.execute(queries.GET_IO_EVENTS)
         rows = cur.fetchall()
+        conn.close()
 
         return jsonify([dict(row) for row in rows]), 200
 

@@ -17,32 +17,31 @@ class Database:
         :param db_path: Path to sqlite file.
         """
         self.__db_path = db_path
-        self.__conn = None
 
     def connection(self) -> sqlite3.Connection:
         """Connection returns a sqlite3.Connection to sqlite database."""
 
-        if self.__conn is not None:
-            return self.__conn
-
+        conn = None
         try:
-            self.__conn = sqlite3.connect(self.__db_path)
+            conn = sqlite3.connect(self.__db_path)
         except Error as e:
             logging.error(f"failed to open database connection {e}")
             sys.exit(1)
 
-        return self.__conn
+        return conn
 
     def init_tables(self):
         """Init tables into the sqlite database."""
         try:
-            cursor = self.connection().cursor()
+            conn = self.connection()
+            cursor = conn.cursor()
 
             # create tables
             cursor.execute(queries.CREATE_META_LOGS_TABLE)
             cursor.execute(queries.CREATE_IO_LOGS_TABLE)
 
-            self.connection().commit()
+            conn.commit()
+            conn.close()
         except Error as e:
             logging.error(f"failed to create tables {e}")
             sys.exit(1)
@@ -54,11 +53,11 @@ class Database:
         :param query: query to run
         """
 
-        conn = self.connection()
-
         try:
+            conn = self.connection()
             conn.executemany(query, batch)
             conn.commit()
+            conn.close()
         except Error as e:
             logging.error(f"failed to insert records {e}")
             sys.exit(1)

@@ -17,7 +17,7 @@ class Reader(ABC):
         mono: float,
         wall: float,
         db: Database,
-        batch_size: int = 20,
+        batch_size: int,
     ):
         """The constructor method accepts parameters needed for a general
         log reader instance.
