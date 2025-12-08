@@ -18,7 +18,7 @@ class Routes:
     
     def healthz(self):
         """Healthz return 200 on the /healthz endpoint."""
-        return make_response(None, 200)
+        return make_response("OK", 200)
 
     def list_io_events(self):
         """List IO events."""

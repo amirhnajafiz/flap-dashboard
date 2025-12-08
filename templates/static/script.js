@@ -149,7 +149,7 @@ function plot(events, rendom_events) {
     }
 }
 
-fetch('/api/events')
+fetch('/api/events/io')
   .then(r => r.json())
   .then(rawData => {
     plot(rawData, [])

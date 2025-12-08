@@ -31,7 +31,7 @@ class Router:
     def listen_and_serve(self):
         # define routes
         self.__app.add_url_rule("/", "index", views.index)
-        self.__app.add_url_rule("/healthz", self.__routes.healthz, methods=["GET"])
+        self.__app.add_url_rule("/healthz", "healthz", self.__routes.healthz)
         self.__app.add_url_rule(
             "/api/events/io",
             "list_io_events",
