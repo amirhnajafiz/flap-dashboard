@@ -1,7 +1,7 @@
 import logging
 import os
 
-from src.api.router import Router
+from src.api import Router
 from src.bootstrap import bootstrap
 from src.configs import load_config
 from src.database import Database

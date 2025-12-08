@@ -3,7 +3,7 @@ api:
   debug: false
 
 bootstrap:
-  enable: true
+  enable: false
   logs_path: "logs"
   batch_size: 500
 

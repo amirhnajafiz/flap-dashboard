@@ -68,11 +68,15 @@ WHERE fname IS NULL OR fname = '';
 INSERT_META_LOG_RECORD = """
 INSERT INTO meta_logs (
     en_timestamp, en_datetime, ex_timestamp, ex_datetime, pid, tid, proc, event_name, fname, ret
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 """
 
 INSERT_IO_LOG_RECORD = """
 INSERT INTO io_logs (
     en_timestamp, en_datetime, ex_timestamp, ex_datetime, pid, tid, proc, event_name, fd, ret, countbytes
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+"""
+
+GET_IO_LOGS = """
+SELECT * FROM io_logs;
 """
