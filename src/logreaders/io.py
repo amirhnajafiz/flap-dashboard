@@ -7,6 +7,9 @@ import src.database.queries as queries
 class IOReader(Reader):
     """IO reader reads and records io logs from `io_logs.txt`."""
 
+    def name(self) -> str:
+        return "io"
+
     def start(self) -> bool:
         hashmap = {}  # map to merge log events
         batch = []  # a list to store logs in batch

@@ -7,6 +7,9 @@ import src.database.queries as queries
 class MetaReader(Reader):
     """Meta reader reads and records meta logs from `meta_logs.txt`."""
 
+    def name(self) -> str:
+        return "meta"
+
     def start(self) -> bool:
         hashmap = {}  # map to merge log events
         batch = []  # a list to store logs in batch

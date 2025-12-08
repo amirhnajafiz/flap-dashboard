@@ -282,3 +282,4 @@ counts.txt
 logs.txt
 vllm-logs.txt
 events.logs
+data.db

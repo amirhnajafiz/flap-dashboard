@@ -95,6 +95,11 @@ class Reader(ABC):
             "operand": match.group("operand"),
             "spec": spec,
         }
+    
+    @classmethod
+    def name(self) -> str:
+        """Return the name of reader instance."""
+        pass
 
     @classmethod
     def start(self) -> tuple[bool, str]:

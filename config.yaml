@@ -1,0 +1,14 @@
+api:
+  port: 5050
+  debug: false
+
+bootstrap:
+  enable: true
+  logs_path: "logs"
+  batch_size: 500
+
+database:
+  path: "data.db"
+
+logging:
+  level: "debug"
