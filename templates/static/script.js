@@ -152,6 +152,6 @@ function plot(events, rendom_events) {
 fetch('/api/events/io')
   .then(r => r.json())
   .then(rawData => {
-    plot(rawData, [])
+    plot(rawData.slice(0, 100), [])
   })
   .catch(err => console.error('Error loading /api/events', err));

@@ -12,3 +12,21 @@ body {
 .grid path {
     stroke-width: 0;
 }
+
+.holder {
+    margin: 100px auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#tooltip {
+    position: absolute;
+    background: #fff;
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 12px;
+    pointer-events: none;
+    opacity: 0;
+}
