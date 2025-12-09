@@ -1,29 +1,47 @@
-// size and boundary
-const svg = d3.select("#chart");
-const width = +svg.attr("width");
-const height = +svg.attr("height");
+// size
+const width = 1600;
+const height = 800;
 
+// select the svg element by it's ID
+const svg = d3.select("#chart")
+    .attr("width", width)
+    .attr("height", height)
+    .style("overflow", "hidden");
+
+// boundaries
 const margin = { top: 40, right: 40, bottom: 40, left: 120 };
 const innerWidth = width - margin.left - margin.right;
 const innerHeight = height - margin.top - margin.bottom;
 
-svg.style("overflow", "hidden");
-
+// create a group inside the svg
 const g = svg.append("g")
-            .attr("transform", `translate(${margin.left},${margin.top})`);
+    .attr("transform", `translate(${margin.left},${margin.top})`)
+    .style("overflow", "hidden");
 
+// set a rectangle as background
+g.append("rect")
+    .attr("width", innerWidth)
+    .attr("height", innerHeight)
+    .attr("fill", "steelblue")
+    .attr("opacity", 0.1);
+
+// create a parse time lambda
+const parseTime = d3.utcParse("%Y-%m-%d %H:%M:%S.%f");
+// define a color scale using a predefined scheme
+const color = d3.scaleOrdinal(d3.schemeCategory10);
+
+// plot the diagram
 function plot(events, rendom_events) {
-    const parseTime = d3.utcParse("%Y-%m-%d %H:%M:%S.%f");
+    // parse the datetimes
     events.forEach(d => {
         d.start = parseTime(d.en_datetime);
         d.end   = parseTime(d.ex_datetime);
     });
-
     rendom_events.forEach(d => {
         d.time  = parseTime(d.datetime);
     });
 
-    // scales
+    // create both x and y scales
     const xScale = d3.scaleTime()
         .domain([
             d3.min([d3.min(events, d => d.start), d3.min(rendom_events, d => d.time)]),
@@ -31,46 +49,45 @@ function plot(events, rendom_events) {
         ])
         .range([0, innerWidth])
         .nice();
-
     const yScale = d3.scaleBand()
         .domain([...new Set(events.map(d => d.event_name))])
         .range([0, innerHeight])
         .padding(0.4);
 
-    // axes
+    // create x and y axes
     const xAxis = d3.axisBottom(xScale)
         .ticks(10)
         .tickSize(-innerHeight)
         .tickFormat(d3.utcFormat("%H:%M:%S.%f"));
+    const yAxis = d3.axisLeft(yScale)
+        .tickSize(-innerWidth);
 
-    const yAxis = d3.axisLeft(yScale);
-
+    // create the grid lines
     const gx = g.append("g")
         .attr("class", "x-axis grid")
         .attr("transform", `translate(0,${innerHeight})`)
         .call(xAxis);
-
-    const gy = g.append("g")
-        .attr("class", "y-axis")
+    g.append("g")
+        .attr("class", "y-axis grid")
+        .style("font-weight", "bold")
         .call(yAxis);
 
+    // create the labels
     svg.append("text")
       .attr("class", "title")
       .attr("text-anchor", "middle")
       .attr("transform", `translate(${width / 2}, ${margin.top / 2})`)
-      .text("Tracing Time");
-    
+      .text("File Access Patterns Tracing");
     svg.append("text")
       .attr("class", "axis-label")
       .attr("text-anchor", "middle")
       .attr("transform", `translate(${width / 2}, ${height})`)
-      .text("time");
-
+      .text("time (ns)");
     svg.append("text")
       .attr("class", "axis-label")
       .attr("text-anchor", "middle")
       .attr("transform", `translate(40, ${height / 2}) rotate(-90)`)
-      .text("operand");
+      .text("event (operand/operation)");
     
     // draw sections
     const sections = g.append("g")
@@ -99,11 +116,11 @@ function plot(events, rendom_events) {
         .attr("x2", d => xScale(d.end))
         .attr("y1", d => yScale(d.event_name) + yScale.bandwidth()/2)
         .attr("y2", d => yScale(d.event_name) + yScale.bandwidth()/2)
-        .attr("stroke", "#0074D9")
-        .attr("stroke-width", 5)
+        .attr("stroke", (d, _) => color(d.event_name))
+        .attr("stroke-width", 7)
         .attr("stroke-linecap", "round")
         .attr("opacity", 0.95)
-        .on("mouseover", function(event, d) {
+        .on("mouseover", function(_, d) {
             d3.select("#tooltip")
                 .style("opacity", 1)
                 .html(`
@@ -135,10 +152,10 @@ function plot(events, rendom_events) {
         const t = event.transform;
         const zx = t.rescaleX(xScale);
 
-        // Update axes
+        // update axes
         gx.call(xAxis.scale(zx));
 
-        // Update line positions
+        // update line positions
         sections.selectAll("line")
             .attr("x1", d => zx(d.time))
             .attr("x2", d => zx(d.time));
