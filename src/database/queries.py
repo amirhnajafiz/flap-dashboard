@@ -78,5 +78,5 @@ INSERT INTO io_logs (
 """
 
 GET_IO_LOGS = """
-SELECT * FROM io_logs;
+SELECT * FROM io_logs WHERE proc = ?
 """

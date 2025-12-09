@@ -26,7 +26,7 @@ class Routes:
         conn.row_factory = sqlite3.Row
 
         cur = conn.cursor()
-        cur.execute(queries.GET_IO_LOGS)
+        cur.execute(queries.GET_IO_LOGS, ('vllm',))
         rows = cur.fetchall()
 
         conn.close()

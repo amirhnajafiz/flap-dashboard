@@ -2,36 +2,46 @@
 const width = 1600;
 const height = 800;
 
-// select the svg element by it's ID
-const svg = d3.select("#chart")
-    .attr("width", width)
-    .attr("height", height)
-    .style("overflow", "hidden");
-
 // boundaries
 const margin = { top: 40, right: 40, bottom: 40, left: 120 };
 const innerWidth = width - margin.left - margin.right;
 const innerHeight = height - margin.top - margin.bottom;
 
-// create a group inside the svg
-const g = svg.append("g")
-    .attr("transform", `translate(${margin.left},${margin.top})`)
-    .style("overflow", "hidden");
-
-// set a rectangle as background
-g.append("rect")
-    .attr("width", innerWidth)
-    .attr("height", innerHeight)
-    .attr("fill", "steelblue")
-    .attr("opacity", 0.1);
-
 // create a parse time lambda
 const parseTime = d3.utcParse("%Y-%m-%d %H:%M:%S.%f");
+
 // define a color scale using a predefined scheme
 const color = d3.scaleOrdinal(d3.schemeCategory10);
 
 // plot the diagram
 function plot(events, rendom_events) {
+    // select the svg element by it's ID
+    const svg = d3.select("#chart")
+        .attr("width", width)
+        .attr("height", height)
+        .style("overflow", "hidden");
+    
+    svg.append("defs")
+        .append("clipPath")
+        .attr("id", "clip")
+        .append("rect")
+        .attr("width", innerWidth)
+        .attr("height", innerHeight);
+
+    // create a group inside the svg
+    const g = svg.append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`)
+        .attr("width", innerWidth)
+        .attr("height", innerHeight)
+        .style("overflow", "hidden");
+
+    // set a rectangle as background
+    g.append("rect")
+        .attr("width", innerWidth)
+        .attr("height", innerHeight)
+        .attr("fill", "steelblue")
+        .attr("opacity", 0.1);
+
     // parse the datetimes
     events.forEach(d => {
         d.start = parseTime(d.en_datetime);
@@ -91,7 +101,8 @@ function plot(events, rendom_events) {
     
     // draw sections
     const sections = g.append("g")
-        .attr("class", "sections");
+        .attr("class", "sections")
+        .attr("clip-path", "url(#clip)");
     
     sections.selectAll("line")
         .data(rendom_events)
@@ -106,7 +117,8 @@ function plot(events, rendom_events) {
 
     // draw events
     const lines = g.append("g")
-        .attr("class", "event-lines");
+        .attr("class", "event-lines")
+        .attr("clip-path", "url(#clip)");
 
     lines.selectAll("line")
         .data(events)
@@ -166,9 +178,18 @@ function plot(events, rendom_events) {
     }
 }
 
-fetch('/api/events/io')
-  .then(r => r.json())
-  .then(rawData => {
-    plot(rawData.slice(0, 100), [])
-  })
-  .catch(err => console.error('Error loading /api/events', err));
+// use fetch to make an API call
+function fetch_io_events() {
+    fetch('/api/events/io')
+        .then(response => response.json())
+        .then(data => {
+            plot(data, []);
+        })
+        .catch(err => {
+            console.error('Error loading /api/events', err);
+            alert(err);
+        });
+}
+
+// call the fetch io
+fetch_io_events();
