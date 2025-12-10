@@ -26,6 +26,8 @@ class Routes:
         proc = request.args.get("proc", type=str)
         page = request.args.get("page", default=1, type=int)
         desc_value = request.args.get("desc", default="false", type=str).lower()
+        hide_unknown = request.args.get("hunk", type=str)
+        remove_stds = request.args.get("rmstd", type=str)
 
         session = self.__db.new_session()()
 
@@ -34,6 +36,16 @@ class Routes:
             .where(IOLog.proc.is_(proc))
             .where(IOLog.event_name.is_not("close"))
             .group_by(IOLog.fname)
+        )
+        base_query = (
+            base_query.where(IOLog.fname.is_not("unknown"))
+            if hide_unknown and hide_unknown == "true"
+            else base_query
+        )
+        base_query = (
+            base_query.where(IOLog.fd.not_in([0, 1, 2]))
+            if remove_stds and remove_stds == "true"
+            else base_query
         )
 
         count_subq = base_query.subquery()
@@ -66,6 +78,8 @@ class Routes:
         proc = request.args.get("proc", type=str)
         page = request.args.get("page", default=1, type=int)
         desc_value = request.args.get("desc", default="false", type=str).lower()
+        hide_unknown = request.args.get("hunk", type=str)
+        remove_stds = request.args.get("rmstd", type=str)
 
         session = self.__db.new_session()()
 
@@ -74,6 +88,16 @@ class Routes:
             .where(IOLog.proc.is_(proc))
             .where(IOLog.event_name.is_not("close"))
             .group_by(IOLog.fname)
+        )
+        base_query = (
+            base_query.where(IOLog.fname.is_not("unknown"))
+            if hide_unknown and hide_unknown == "true"
+            else base_query
+        )
+        base_query = (
+            base_query.where(IOLog.fd.not_in([0, 1, 2]))
+            if remove_stds and remove_stds == "true"
+            else base_query
         )
 
         count_subq = base_query.subquery()
@@ -106,6 +130,8 @@ class Routes:
         proc = request.args.get("proc", type=str)
         page = request.args.get("page", default=1, type=int)
         desc_value = request.args.get("desc", default="false", type=str).lower()
+        hide_unknown = request.args.get("hunk", type=str)
+        remove_stds = request.args.get("rmstd", type=str)
 
         session = self.__db.new_session()()
 
@@ -117,6 +143,16 @@ class Routes:
             .where(IOLog.proc.is_(proc))
             .where(IOLog.event_name.is_not("close"))
             .group_by(IOLog.fname)
+        )
+        base_query = (
+            base_query.where(IOLog.fname.is_not("unknown"))
+            if hide_unknown and hide_unknown == "true"
+            else base_query
+        )
+        base_query = (
+            base_query.where(IOLog.fd.not_in([0, 1, 2]))
+            if remove_stds and remove_stds == "true"
+            else base_query
         )
 
         count_subq = base_query.subquery()
@@ -160,6 +196,7 @@ class Routes:
 
         proc = request.args.get("proc", type=str)
         hide_unknown = request.args.get("hunk", type=str)
+        remove_stds = request.args.get("rmstd", type=str)
         fname = request.args.get("fname", type=str)
 
         session = self.__db.new_session()()
@@ -170,6 +207,11 @@ class Routes:
         query = (
             query.where(IOLog.fname.is_not("unknown"))
             if hide_unknown and hide_unknown == "true"
+            else query
+        )
+        query = (
+            query.where(IOLog.fd.not_in([0, 1, 2]))
+            if remove_stds and remove_stds == "true"
             else query
         )
         query = (
