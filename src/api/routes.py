@@ -112,9 +112,7 @@ class Routes:
         base_query = (
             select(
                 IOLog.fname,
-                func.sum(IOLog.ex_timestamp - IOLog.en_timestamp).label(
-                    "total_duration"
-                ),
+                func.sum(IOLog.latency).label("total_duration"),
             )
             .where(IOLog.proc.is_(proc))
             .where(IOLog.event_name.is_not("close"))

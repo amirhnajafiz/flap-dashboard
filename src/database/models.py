@@ -16,6 +16,7 @@ class MetaLog(BaseModel, AsDictMixin):
     en_datetime = Column(Text)
     ex_timestamp = Column(BigInteger)
     ex_datetime = Column(Text)
+    latency = Column(BigInteger)
 
     pid = Column(Integer)
     tid = Column(Integer)
@@ -38,6 +39,7 @@ class IOLog(BaseModel, AsDictMixin):
     en_datetime = Column(Text)
     ex_timestamp = Column(BigInteger)
     ex_datetime = Column(BigInteger)
+    latency = Column(BigInteger)
 
     pid = Column(Integer)
     tid = Column(Integer)

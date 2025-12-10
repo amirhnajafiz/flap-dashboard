@@ -87,7 +87,7 @@ class Reader(ABC):
             "timestamp": match.group("time"),
             "datetime": self.convert_monotonic_time_to_datetime(
                 input=float(match.group("time"))
-            ).isoformat(" "),
+            ),
             "pid": match.group("pid"),
             "tid": match.group("tid"),
             "proc": match.group("proc"),

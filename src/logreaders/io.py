@@ -46,9 +46,10 @@ class IOReader(Reader):
                         batch.append(
                             IOLog(
                                 en_timestamp=int(en_obj["timestamp"]),
-                                en_datetime=en_obj["datetime"],
+                                en_datetime=en_obj["datetime"].isoformat(" "),
                                 ex_timestamp=int(obj["timestamp"]),
-                                ex_datetime=obj["datetime"],
+                                ex_datetime=obj["datetime"].isoformat(" "),
+                                latency=(obj["datetime"] - en_obj["datetime"]).total_seconds() * (10**9),
                                 pid=obj["pid"],
                                 tid=obj["tid"],
                                 proc=obj["proc"],
