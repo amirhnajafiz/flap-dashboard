@@ -30,3 +30,9 @@ body {
     pointer-events: none;
     opacity: 0;
 }
+
+#analysis {
+    margin: 20px auto;
+    width: 75%;
+    padding: 2px;
+}

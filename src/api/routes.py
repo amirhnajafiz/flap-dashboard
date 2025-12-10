@@ -19,10 +19,23 @@ class Routes:
         """Healthz return 200 on the /healthz endpoint."""
         return make_response("OK", 200)
 
+    def get_files_count(self):
+        """Get files count."""
+        pass
+
+    def get_files_bytes(self):
+        """Get files bytes."""
+        pass
+
+    def get_files_duration(self):
+        """Get files durations."""
+        pass
+
     def list_procs(self):
         """List IO processes."""
         LocalSession = self.__db.new_session()
         session = LocalSession()
+
         query = select(IOLog.proc).distinct()
         records = session.execute(query).scalars().all()
 
@@ -36,11 +49,11 @@ class Routes:
 
         LocalSession = self.__db.new_session()
         session = LocalSession()
+
         query = select(IOLog)
 
         if proc is not None and len(proc) > 0:
             query = query.where(IOLog.proc.is_(proc))
-        
         if hide_unknown == "true":
             query = query.where(IOLog.fname.is_not("unknown"))
 
