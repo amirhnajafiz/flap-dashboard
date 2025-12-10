@@ -180,7 +180,7 @@ function plot(events, rendom_events) {
 
 // use fetch to make an API call
 function fetch_io_events() {
-    fetch('/api/events/io')
+    fetch('/api/events/io?proc=vllm')
         .then(response => response.json())
         .then(data => {
             plot(data, []);

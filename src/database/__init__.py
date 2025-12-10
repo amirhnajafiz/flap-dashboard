@@ -6,6 +6,13 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 
+class AsDictMixin:
+    """To support to dict convert for database models."""
+
+    def to_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+
 class BaseModel(DeclarativeBase):
     """Base model is a sqlalchemy declarative base model."""
 

@@ -1,12 +1,13 @@
 from sqlalchemy import BigInteger, Column, Index, Integer, String, Text
 
-from src.database import BaseModel
+from src.database import AsDictMixin, BaseModel
 
 
-class MetaLog(BaseModel):
+class MetaLog(BaseModel, AsDictMixin):
     """A meta log model stores information about a meta entry.
     these logs will be used to provide useful details for io events.
     """
+
     __tablename__ = "meta_logs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -26,8 +27,9 @@ class MetaLog(BaseModel):
     __table_args__ = (Index("idx_meta_proc_ret_ts", "proc", "ret", "en_timestamp"),)
 
 
-class IOLog(BaseModel):
+class IOLog(BaseModel, AsDictMixin):
     """An IO log model is used to replay the target application io operations."""
+
     __tablename__ = "io_logs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)

@@ -1,8 +1,8 @@
-import sqlite3
+from sqlalchemy import select
+from src.database.models import IOLog
 
-from flask import jsonify, make_response
+from flask import jsonify, make_response, request
 
-import src.database.queries as queries
 from src.database import Database
 
 
@@ -22,13 +22,16 @@ class Routes:
 
     def list_io_events(self):
         """List IO events."""
-        conn = self.__db.connection()
-        conn.row_factory = sqlite3.Row
 
-        cur = conn.cursor()
-        cur.execute(queries.GET_IO_LOGS, ('vllm',))
-        rows = cur.fetchall()
+        proc = request.args.get("proc", type=str)
 
-        conn.close()
+        LocalSession = self.__db.new_session()
+        session = LocalSession()
+        query = select(IOLog)
 
-        return jsonify([dict(row) for row in rows]), 200
+        if proc is not None and len(proc) > 0:
+            query = query.where(IOLog.proc.is_(proc))
+        
+        records = session.execute(query).scalars().all()
+
+        return jsonify([r.to_dict() for r in records]), 200
