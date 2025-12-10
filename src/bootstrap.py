@@ -1,7 +1,7 @@
 import logging
 
 from src.database import Database
-from src.database.queries import UPDATE_FNAME_VALUES
+from src.database.queries import UPDATE_IO_FNAME_VALUES, UPDATE_FD_FNAME_VALUES
 from src.logreaders.io import IOReader
 from src.logreaders.meta import MetaReader
 from src.utils.files import import_time_references
@@ -32,7 +32,8 @@ def bootstrap(
 
     # update fname values
     logging.info("updating file names")
-    db.raw_execute(UPDATE_FNAME_VALUES)
+    db.raw_execute(UPDATE_IO_FNAME_VALUES)
+    db.raw_execute(UPDATE_FD_FNAME_VALUES)
     logging.info("done updating file names")
 
 

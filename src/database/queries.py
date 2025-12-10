@@ -1,4 +1,14 @@
-UPDATE_FNAME_VALUES = """
+UPDATE_FD_FNAME_VALUES = """
+UPDATE io_logs
+SET fname = CASE
+    WHEN fd = 0 THEN 'stdin'
+    WHEN fd = 1 THEN 'stdout'
+    WHEN fd = 2 THEN 'stderr'
+END
+WHERE fd IN (0, 1, 2);
+"""
+
+UPDATE_IO_FNAME_VALUES = """
 UPDATE io_logs
 SET fname = COALESCE(
     (
@@ -16,6 +26,14 @@ SET fname = COALESCE(
            AND m2.en_timestamp = best.ts
         LIMIT 1
     ),
+
+    CASE io_logs.fd
+        WHEN 0 THEN 'stdin'
+        WHEN 1 THEN 'stdout'
+        WHEN 2 THEN 'stderr'
+        ELSE NULL
+    END,
+
     'unknown'
 )
 WHERE fname IS NULL OR fname = '';
