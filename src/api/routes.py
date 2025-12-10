@@ -148,8 +148,7 @@ class Routes:
 
     def list_procs(self):
         """List IO processes."""
-        LocalSession = self.__db.new_session()
-        session = LocalSession()
+        session = self.__db.new_session()()
 
         query = select(IOLog.proc).distinct()
         records = session.execute(query).scalars().all()
@@ -161,16 +160,21 @@ class Routes:
 
         proc = request.args.get("proc", type=str)
         hide_unknown = request.args.get("hunk", type=str)
+        fname = request.args.get("fname", type=str)
 
-        LocalSession = self.__db.new_session()
-        session = LocalSession()
+        session = self.__db.new_session()()
 
         query = select(IOLog)
 
-        if proc is not None and len(proc) > 0:
-            query = query.where(IOLog.proc.is_(proc))
-        if hide_unknown == "true":
-            query = query.where(IOLog.fname.is_not("unknown"))
+        query = query.where(IOLog.proc.is_(proc)) if proc and len(proc) > 0 else query
+        query = (
+            query.where(IOLog.fname.is_not("unknown"))
+            if hide_unknown and hide_unknown == "true"
+            else query
+        )
+        query = (
+            query.where(IOLog.fname.is_(fname)) if fname and len(fname) > 0 else query
+        )
 
         records = session.execute(query).scalars().all()
 
