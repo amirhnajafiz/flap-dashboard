@@ -139,7 +139,10 @@ function plot(events, rendom_events) {
                 .style("opacity", 1)
                 .html(`
                     <strong>${d.event_name}</strong><br>
-                    <span style="color:#555">${d.fname}</span><br>
+                    <span style="color:#555">File:${d.fname}</span><br>
+                    <span style="color:#555">Bytes:${d.countbytes}</span><br>
+                    <span style="color:#555">Duration:${d.latency}</span><br>
+                    <span style="color:#555">Return:${d.ret}</span><br>
                     <small>${d.en_datetime} - ${d.ex_datetime}</small>
                 `);
         })
