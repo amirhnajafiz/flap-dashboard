@@ -1,79 +1,65 @@
 import logging
-import sqlite3
 import sys
-from sqlite3 import Error
 
-from sqlalchemy import create_engine, text
+from sqlalchemy import Connection, create_engine, text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
-
-import src.database.queries as queries
 
 
 class BaseModel(DeclarativeBase):
+    """Base model is a sqlalchemy declarative base model."""
+
     pass
 
 
-class NewDatabase:
-    def __init__(self, db_path: str):
-        self.engine = create_engine(f"sqlite:///{db_path}", echo=False, future=True)
-
-    def session(self):
-        return sessionmaker(
-            bind=self.engine, autoflush=False, autocommit=False, future=True
-        )
-
-    def init_tables(self):
-        BaseModel.metadata.create_all(self.engine)
-
-    def raw_execute(self, query: str):
-        with self.engine.connect() as conn:
-            conn.execute(text(query))
-
-
 class Database:
-    """Database module connects to the sqlite database and provides the
-    interface for data management.
-    """
+    """Database module uses sqlalchemy orm to provide database interface."""
 
     def __init__(self, db_path: str):
-        """Database constructor.
+        """In constructor method, a new database engine is created.
 
-        :param db_path: Path to sqlite file.
+        :param db_path: path to sqlite database file.
         """
-        self.__db_path = db_path
+        self._db_path = db_path
+        self._engine = create_engine(f"sqlite:///{db_path}", echo=False, future=True)
 
-    def connection(self) -> sqlite3.Connection:
-        """Connection returns a sqlite3.Connection to sqlite database."""
-
-        conn = None
+    def new_connection(self) -> Connection:
+        """New connections opens and returns a new database connection."""
         try:
-            conn = sqlite3.connect(self.__db_path)
-        except Error as e:
-            logging.error(f"failed to open database connection {e}")
+            return self._engine.connect()
+        except SQLAlchemyError as e:
+            logging.error(f"failed to open a new connection: {e}")
             sys.exit(1)
 
-        return conn
+    def new_session(self) -> sessionmaker:
+        """New session creates a new session using the existing sqlite engine."""
+        try:
+            return sessionmaker(
+                bind=self._engine, autoflush=False, autocommit=False, future=True
+            )
+        except SQLAlchemyError as e:
+            logging.error(f"failed to open a new session: {e}")
+            sys.exit(1)
 
     def init_tables(self):
         """Init tables into the sqlite database."""
         try:
-            # open a new connection
-            conn = self.connection()
-            cursor = conn.cursor()
+            BaseModel.metadata.create_all(self._engine)
+        except SQLAlchemyError as e:
+            logging.error(f"failed to create tables: {e}")
+            sys.exit(1)
 
-            # create tables
-            cursor.execute(queries.CREATE_META_LOGS_TABLE)
-            cursor.execute(queries.CREATE_IO_LOGS_TABLE)
+    def batch_insert(self, records: list[any]):
+        """Batch insert accepts a list of records to insert.
 
-            # create indexes
-            cursor.execute(queries.CREATE_META_LOGS_INDEX)
-            cursor.execute(queries.CREATE_IO_LOGS_INDEX)
-
-            # commit and close
-            conn.commit()
-            conn.close()
-        except Error as e:
-            logging.error(f"failed to create tables {e}")
+        :param records: list of records to insert
+        """
+        try:
+            with self.new_session().begin() as session:
+                session.bulk_save_objects(records)
+                session.commit()
+        except SQLAlchemyError as e:
+            logging.error(f"failed to insert batch: {e}")
             sys.exit(1)
 
     def raw_execute(self, query: str):
@@ -82,37 +68,9 @@ class Database:
         :param query: a query to run
         """
         try:
-            # open a new connection
-            conn = self.connection()
-            cursor = conn.cursor()
-
-            # execute the query
-            cursor.execute(query)
-
-            # commit and close
-            conn.commit()
-            conn.close()
-        except Error as e:
-            logging.error(f"failed to execute query \n{query} \n\n\t {e}")
-            sys.exit(1)
-
-    def insert_records(self, batch: list, query: str):
-        """Insert records as batch.
-
-        :param batch: list of objects
-        :param query: query to run
-        """
-
-        try:
-            # open a new connection
-            conn = self.connection()
-
-            # call execute many
-            conn.executemany(query, batch)
-
-            # commit and close
-            conn.commit()
-            conn.close()
-        except Error as e:
-            logging.error(f"failed to insert records {e}")
+            with self._engine.connect() as conn:
+                conn.execute(text(query))
+                conn.commit()
+        except SQLAlchemyError as e:
+            logging.error(f"failed to execute query {e}:\n'\n{query}\n'\n")
             sys.exit(1)

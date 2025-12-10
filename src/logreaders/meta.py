@@ -1,7 +1,7 @@
 import os
 
+from src.database.models import MetaLog
 from src.logreaders import Reader
-import src.database.queries as queries
 
 
 class MetaReader(Reader):
@@ -43,23 +43,23 @@ class MetaReader(Reader):
                     # exclude the negative records
                     if ret > -1:
                         batch.append(
-                            (
-                                int(en_obj["timestamp"]),
-                                en_obj["datetime"],
-                                int(obj["timestamp"]),
-                                obj["datetime"],
-                                obj["pid"],
-                                obj["tid"],
-                                obj["proc"],
-                                obj["operand"],
-                                en_obj["spec"].get("fname", "unknown"),
-                                ret
+                            MetaLog(
+                                en_timestamp=int(en_obj["timestamp"]),
+                                en_datetime=en_obj["datetime"],
+                                ex_timestamp=int(obj["timestamp"]),
+                                ex_datetime=obj["datetime"],
+                                pid=obj["pid"],
+                                tid=obj["tid"],
+                                proc=obj["proc"],
+                                event_name=obj["operand"],
+                                fname=en_obj["spec"].get("fname", "unknown"),
+                                ret=ret,
                             )
                         )
 
                 if len(batch) > limit:
-                    self.db.insert_records(batch, queries.INSERT_META_LOG_RECORD)
+                    self.db.batch_insert(batch)
                     batch = []
 
         if len(batch) > 0:
-            self.db.insert_records(batch, queries.INSERT_META_LOG_RECORD)
+            self.db.batch_insert(batch)

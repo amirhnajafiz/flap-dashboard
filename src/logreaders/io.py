@@ -1,7 +1,7 @@
 import os
 
+from src.database.models import IOLog
 from src.logreaders import Reader
-import src.database.queries as queries
 
 
 class IOReader(Reader):
@@ -12,7 +12,7 @@ class IOReader(Reader):
 
     def start(self) -> bool:
         hashmap = {}  # map to merge log events
-        batch = []  # a list to store logs in batch
+        batch = []  # a list to store IO logs in batch
 
         # reader params
         filepath = os.path.join(self.dir_path, "io_logs.txt")
@@ -44,24 +44,24 @@ class IOReader(Reader):
                     # exclude the negative records
                     if fd > -1 and ret > -1:
                         batch.append(
-                            (
-                                int(en_obj["timestamp"]),
-                                en_obj["datetime"],
-                                int(obj["timestamp"]),
-                                obj["datetime"],
-                                obj["pid"],
-                                obj["tid"],
-                                obj["proc"],
-                                obj["operand"],
-                                fd,
-                                ret,
-                                int(en_obj["spec"].get("count", 0))
+                            IOLog(
+                                en_timestamp=int(en_obj["timestamp"]),
+                                en_datetime=en_obj["datetime"],
+                                ex_timestamp=int(obj["timestamp"]),
+                                ex_datetime=obj["datetime"],
+                                pid=obj["pid"],
+                                tid=obj["tid"],
+                                proc=obj["proc"],
+                                event_name=obj["operand"],
+                                fd=fd,
+                                ret=ret,
+                                countbytes=int(en_obj["spec"].get("count", 0)),
                             )
                         )
 
                 if len(batch) > limit:
-                    self.db.insert_records(batch, queries.INSERT_IO_LOG_RECORD)
+                    self.db.batch_insert(batch)
                     batch = []
 
         if len(batch) > 0:
-            self.db.insert_records(batch, queries.INSERT_IO_LOG_RECORD)
+            self.db.batch_insert(batch)

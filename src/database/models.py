@@ -4,6 +4,9 @@ from src.database import BaseModel
 
 
 class MetaLog(BaseModel):
+    """A meta log model stores information about a meta entry.
+    these logs will be used to provide useful details for io events.
+    """
     __tablename__ = "meta_logs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -24,6 +27,7 @@ class MetaLog(BaseModel):
 
 
 class IOLog(BaseModel):
+    """An IO log model is used to replay the target application io operations."""
     __tablename__ = "io_logs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
