@@ -21,6 +21,8 @@ function plot(events, rendom_events) {
         .attr("height", height)
         .style("overflow", "hidden");
     
+    svg.selectAll("*").remove();
+    
     svg.append("defs")
         .append("clipPath")
         .attr("id", "clip")
@@ -60,7 +62,7 @@ function plot(events, rendom_events) {
         .range([0, innerWidth])
         .nice();
     const yScale = d3.scaleBand()
-        .domain([...new Set(events.map(d => d.event_name))])
+        .domain([...new Set(events.map(d => d.event_name))].sort())
         .range([0, innerHeight])
         .padding(0.4);
 
@@ -179,8 +181,12 @@ function plot(events, rendom_events) {
 }
 
 // use fetch to make an API call
-function fetch_io_events() {
-    fetch('/api/events/io?proc=vllm')
+function fetch_io_events(proc_name) {
+    const el = document.getElementById("hunk");
+    const hunk = el.checked;
+
+    const url = `/api/events/io?proc=${encodeURIComponent(proc_name)}&hunk=${hunk}`;
+    fetch(url)
         .then(response => response.json())
         .then(data => {
             plot(data, []);
@@ -191,5 +197,50 @@ function fetch_io_events() {
         });
 }
 
-// call the fetch io
-fetch_io_events();
+// use fetch to get the procs list
+function fetch_procs() {
+    fetch('/api/events/procs')
+        .then(response => response.json())
+        .then(data => {
+            const el = document.getElementById("procs");
+            el.innerHTML = ""; // clear old radios
+
+            data.forEach(proc => {
+                // container
+                const wrapper = document.createElement("div");
+
+                const id = "proc_" + proc.replace(/[^a-zA-Z0-9]/g, "_");
+
+                // radio input
+                const radio = document.createElement("input");
+                radio.id = id;
+                radio.type = "radio";
+                radio.name = "proc";        // same name = radio group
+                radio.value = proc;
+                radio.addEventListener("change", () => {
+                    fetch_io_events(proc);   // call your function
+                });
+
+                // label
+                const label = document.createElement("label");
+                label.textContent = proc;
+                label.htmlFor = id;
+                label.style.marginLeft = "6px";
+                label.addEventListener("click", () => {
+                    radio.checked = true;
+                    fetch_io_events(proc);
+                });
+
+                wrapper.appendChild(radio);
+                wrapper.appendChild(label);
+                el.appendChild(wrapper);
+            });
+        })
+        .catch(err => {
+            console.error('Error loading /api/events', err);
+            alert(err);
+        })
+}
+
+// call the fetch procs
+fetch_procs();

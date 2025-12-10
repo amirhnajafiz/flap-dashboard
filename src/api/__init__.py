@@ -33,6 +33,9 @@ class Router:
         self.__app.add_url_rule("/", "index", views.index)
         self.__app.add_url_rule("/healthz", "healthz", self.__routes.healthz)
         self.__app.add_url_rule(
+            "/api/events/procs", "list_procs", self.__routes.list_procs, methods=["GET"]
+        )
+        self.__app.add_url_rule(
             "/api/events/io",
             "list_io_events",
             self.__routes.list_io_events,
