@@ -33,6 +33,24 @@ class Router:
         self.__app.add_url_rule("/", "index", views.index)
         self.__app.add_url_rule("/healthz", "healthz", self.__routes.healthz)
         self.__app.add_url_rule(
+            "/api/files/count",
+            "count_files",
+            self.__routes.get_files_count,
+            methods=["GET"],
+        )
+        self.__app.add_url_rule(
+            "/api/files/bytes",
+            "sum_bytes",
+            self.__routes.get_files_bytes,
+            methods=["GET"],
+        )
+        self.__app.add_url_rule(
+            "/api/files/duration",
+            "sum_duration",
+            self.__routes.get_files_duration,
+            methods=["GET"],
+        )
+        self.__app.add_url_rule(
             "/api/events/procs", "list_procs", self.__routes.list_procs, methods=["GET"]
         )
         self.__app.add_url_rule(
