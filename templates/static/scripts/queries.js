@@ -8,7 +8,7 @@ function newCall(fname) {
 
 // --- Fetch Data ---
 function fetch_query() {
-  const type = document.getElementById("query_type").value;
+  const type = document.getElementById("query-type").value;
   const proc = document.querySelector('input[name="proc"]:checked');
   const hunk = document.getElementById("hunk").checked;
   const stds = document.getElementById("remove_stds").checked;
@@ -32,7 +32,7 @@ function fetch_query() {
 
 // --- Render Report + Paging ---
 function render_query(resp) {
-  const container = document.getElementById("query_report");
+  const container = document.getElementById("query-report");
   container.innerHTML = "";
 
   // Build table
@@ -67,11 +67,11 @@ function render_query(resp) {
 
   // --- paging controls ---
   document.getElementById(
-    "page_info"
+    "page-info"
   ).textContent = `Page ${resp.page} of ${resp.total_pages}`;
 
-  const prevBtn = document.getElementById("prev_page");
-  const nextBtn = document.getElementById("next_page");
+  const prevBtn = document.getElementById("prev-page");
+  const nextBtn = document.getElementById("next-page");
 
   prevBtn.disabled = !resp.prev_page;
   nextBtn.disabled = !resp.next_page;
@@ -92,7 +92,7 @@ function render_query(resp) {
 }
 
 // --- Trigger fetch when dropdown changes ---
-document.getElementById("query_type").addEventListener("change", () => {
+document.getElementById("query-type").addEventListener("change", () => {
   currentPage = 1; // reset on type change
   fetch_query();
 });

@@ -201,7 +201,7 @@ class Routes:
 
         session = self.__db.new_session()()
 
-        query = select(IOLog)
+        query = select(IOLog).limit(20)
 
         query = query.where(IOLog.proc.is_(proc)) if proc and len(proc) > 0 else query
         query = (

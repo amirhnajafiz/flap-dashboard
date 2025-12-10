@@ -3,7 +3,7 @@ const width = 1600;
 const height = 800;
 
 // boundaries
-const margin = { top: 40, right: 40, bottom: 40, left: 120 };
+const margin = { top: 40, right: 40, bottom: 60, left: 120 };
 const innerWidth = width - margin.left - margin.right;
 const innerHeight = height - margin.top - margin.bottom;
 
@@ -93,7 +93,7 @@ function plot(events, rendom_events) {
     svg.append("text")
       .attr("class", "axis-label")
       .attr("text-anchor", "middle")
-      .attr("transform", `translate(${width / 2}, ${height})`)
+      .attr("transform", `translate(${width / 2}, ${height - 10})`)
       .text("time (ns)");
     svg.append("text")
       .attr("class", "axis-label")

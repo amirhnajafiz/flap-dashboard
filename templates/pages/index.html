@@ -13,43 +13,51 @@
     />
   </head>
   <body>
-    <div class="holder">
-      <div id="tooltip"></div>
-      <div>
-        <svg id="chart"></svg>
-      </div>
-      <div>
-        <div>
-          <label>Hide unknown files: </label>
-          <input id="hunk" type="checkbox" name="hunk" checked />
+    <div>
+      <div class="chart-holder">
+        <!-- tooltip is visible upon hover -->
+        <div id="tooltip"></div>
+        <!-- js script fills the svg -->
+        <div class="svg-holder">
+          <svg id="chart"></svg>
         </div>
-        <div>
-          <label>Hide STDIN, STDOUT, STDERR: </label>
-          <input id="remove_stds" type="checkbox" name="remove_stds" />
-        </div>
-        <div>Process:</div>
-        <div id="procs"></div>
-      </div>
-    </div>
-    <div id="analysis">
-      <div>
-        <select id="query_type">
-          <option value="count">File Counts</option>
-          <option value="bytes">File Bytes</option>
-          <option value="duration">File Duration</option>
-        </select>
-        <div>
-          <label>Reverse Order: </label>
-          <input type="checkbox" name="ro" id="reverse_order" />
+        <!-- right side control panel -->
+        <div id="control-panel">
+          <div>
+            <label>hide unknowns: </label>
+            <input id="hunk" type="checkbox" name="hunk" checked />
+          </div>
+          <div>
+            <label>hide std: </label>
+            <input id="remove_stds" type="checkbox" name="remove_stds" />
+          </div>
+          <div>process filter:</div>
+          <div id="procs"></div>
         </div>
       </div>
 
-      <div id="query_report"></div>
-
-      <div id="paging_controls" style="margin-top: 12px">
-        <button id="prev_page">Prev</button>
-        <span id="page_info"></span>
-        <button id="next_page">Next</button>
+      <div id="data-holder">
+        <!-- navigation bar -->
+        <div id="data-holder-navbar">
+          <label style="margin-right: 5px;">operation: </label>
+          <select id="query-type">
+            <option value="count">counts</option>
+            <option value="bytes">volume</option>
+            <option value="duration">latency</option>
+          </select>
+          <div style="margin-left: 20px;">
+            <label>reverse: </label>
+            <input type="checkbox" name="ro" id="reverse_order" />
+          </div>
+        </div>
+        <!-- report holder -->
+        <div id="query-report"></div>
+        <!-- page controls -->
+        <div id="paging-controls" style="margin-top: 12px">
+          <button id="prev-page" style="margin-right: 10px;">Prev</button>
+          <span id="page-info"></span>
+          <button id="next-page" style="margin-left: 10px;">Next</button>
+        </div>
       </div>
     </div>
 
