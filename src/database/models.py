@@ -1,0 +1,46 @@
+from sqlalchemy import BigInteger, Column, Index, Integer, String, Text
+
+from src.database import BaseModel
+
+
+class MetaLog(BaseModel):
+    __tablename__ = "meta_logs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    en_timestamp = Column(BigInteger)
+    en_datetime = Column(Text)
+    ex_timestamp = Column(BigInteger)
+    ex_datetime = Column(Text)
+
+    pid = Column(Integer)
+    tid = Column(Integer)
+    proc = Column(String)
+    event_name = Column(String)
+    fname = Column(String)
+    ret = Column(Integer)
+
+    __table_args__ = (Index("idx_meta_proc_ret_ts", "proc", "ret", "en_timestamp"),)
+
+
+class IOLog(BaseModel):
+    __tablename__ = "io_logs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    en_timestamp = Column(BigInteger)
+    en_datetime = Column(Text)
+    ex_timestamp = Column(BigInteger)
+    ex_datetime = Column(BigInteger)
+
+    pid = Column(Integer)
+    tid = Column(Integer)
+    proc = Column(String)
+    event_name = Column(String)
+
+    fd = Column(Integer)
+    ret = Column(Integer)
+    countbytes = Column(Integer)
+    fname = Column(Text)
+
+    __table_args__ = (Index("idx_io_proc_fd_ts", "proc", "fd", "en_timestamp"),)

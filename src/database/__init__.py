@@ -3,8 +3,12 @@ import sqlite3
 import sys
 from sqlite3 import Error
 
+from sqlalchemy.orm import DeclarativeBase
+
 import src.database.queries as queries
 
+class BaseModel(DeclarativeBase):
+    pass
 
 class Database:
     """Database module connects to the sqlite database and provides the
