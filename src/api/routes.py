@@ -69,6 +69,7 @@ class Routes:
             "total": total,
             "total_pages": total_pages,
             "page_size": page_size,
+            "unit": "Hits"
         }
 
         return jsonify(response)
@@ -121,6 +122,7 @@ class Routes:
             "total": total,
             "total_pages": total_pages,
             "page_size": page_size,
+            "unit": "Bytes"
         }
 
         return jsonify(response)
@@ -178,6 +180,7 @@ class Routes:
             "total": total,
             "total_pages": total_pages,
             "page_size": page_size,
+            "unit": "Latency (ns)"
         }
 
         return jsonify(response)
@@ -201,7 +204,7 @@ class Routes:
 
         session = self.__db.new_session()()
 
-        query = select(IOLog).limit(20)
+        query = select(IOLog)
 
         query = query.where(IOLog.proc.is_(proc)) if proc and len(proc) > 0 else query
         query = (

@@ -1,12 +1,11 @@
 let currentPage = 1;
-let curr_select = "";
 
 function newCall(fname) {
   const proc = document.querySelector('input[name="proc"]:checked');
   fetch_io_events(proc.value, fname);
 }
 
-// --- Fetch Data ---
+// use fetch to get data
 function fetch_query() {
   const type = document.getElementById("query-type").value;
   const proc = document.querySelector('input[name="proc"]:checked');
@@ -18,8 +17,6 @@ function fetch_query() {
     return;
   }
 
-  curr_select = type;
-
   fetch(
     `/api/files/${type}?page=${currentPage}&proc=${encodeURIComponent(
       proc.value
@@ -30,22 +27,22 @@ function fetch_query() {
     .catch((err) => console.error(err));
 }
 
-// --- Render Report + Paging ---
+// render the fetch results
 function render_query(resp) {
   const container = document.getElementById("query-report");
   container.innerHTML = "";
 
-  // Build table
+  // build table
   const table = document.createElement("table");
   table.style.borderCollapse = "collapse";
   table.innerHTML = `
     <tr>
         <th style="border: 1px solid black; padding: 4px;">File</th>
-        <th style="border: 1px solid black; padding: 4px;">${curr_select}</th>
+        <th style="border: 1px solid black; padding: 4px;">${resp.unit}</th>
     </tr>
 `;
 
-  // Add rows
+  // add rows
   resp.data.forEach((row) => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -57,7 +54,7 @@ function render_query(resp) {
     table.appendChild(tr);
   });
 
-  // Add click listener ONCE
+  // add click listener once
   table.addEventListener("click", (e) => {
     const fname = e.target.dataset.fname;
     if (fname) newCall(fname);
@@ -65,7 +62,7 @@ function render_query(resp) {
 
   container.appendChild(table);
 
-  // --- paging controls ---
+  // paging controls
   document.getElementById(
     "page-info"
   ).textContent = `Page ${resp.page} of ${resp.total_pages}`;
@@ -91,11 +88,11 @@ function render_query(resp) {
   };
 }
 
-// --- Trigger fetch when dropdown changes ---
+// trigger fetch when dropdown changes
 document.getElementById("query-type").addEventListener("change", () => {
   currentPage = 1; // reset on type change
   fetch_query();
 });
 
-// --- Load initial ---
+// load initial
 fetch_query();
