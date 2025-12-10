@@ -3,12 +3,32 @@ import sqlite3
 import sys
 from sqlite3 import Error
 
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 import src.database.queries as queries
 
+
 class BaseModel(DeclarativeBase):
     pass
+
+
+class NewDatabase:
+    def __init__(self, db_path: str):
+        self.engine = create_engine(f"sqlite:///{db_path}", echo=False, future=True)
+
+    def session(self):
+        return sessionmaker(
+            bind=self.engine, autoflush=False, autocommit=False, future=True
+        )
+
+    def init_tables(self):
+        BaseModel.metadata.create_all(self.engine)
+
+    def raw_execute(self, query: str):
+        with self.engine.connect() as conn:
+            conn.execute(text(query))
+
 
 class Database:
     """Database module connects to the sqlite database and provides the
