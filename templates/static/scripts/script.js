@@ -181,11 +181,11 @@ function plot(events, rendom_events) {
 }
 
 // use fetch to make an API call
-function fetch_io_events(proc_name) {
-    const el = document.getElementById("hunk");
-    const hunk = el.checked;
+function fetch_io_events(proc_name, fname="") {
+    const hunk = document.getElementById("hunk").checked;
+    const stds = document.getElementById("remove_stds").checked;
 
-    const url = `/api/events/io?proc=${encodeURIComponent(proc_name)}&hunk=${hunk}`;
+    const url = `/api/events/io?proc=${encodeURIComponent(proc_name)}&fname=${encodeURIComponent(fname)}&hunk=${hunk}&rmstd=${stds}`;
     fetch(url)
         .then(response => response.json())
         .then(data => {

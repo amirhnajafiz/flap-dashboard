@@ -4,44 +4,58 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title> 
-      FLAP Dashboard
-    </title>
-    
+    <title>FLAP Dashboard</title>
+
     <!-- CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles/main.css') }}"
+    />
   </head>
   <body>
     <div class="holder">
       <div id="tooltip"></div>
       <div>
-          <svg id="chart"></svg>
+        <svg id="chart"></svg>
       </div>
       <div>
-          <div>
-            <label>Hide unknown files: </label>
-            <input id="hunk" type="checkbox" name="hunk" checked />
-          </div>
-          <div>
-            Process:
-          </div>
-          <div id="procs"></div>
+        <div>
+          <label>Hide unknown files: </label>
+          <input id="hunk" type="checkbox" name="hunk" checked />
+        </div>
+        <div>
+          <label>Hide STDIN, STDOUT, STDERR: </label>
+          <input id="remove_stds" type="checkbox" name="remove_stds" />
+        </div>
+        <div>Process:</div>
+        <div id="procs"></div>
       </div>
     </div>
     <div id="analysis">
       <div>
         <select id="query_type">
-          <option value="counts">File Counts</option>
+          <option value="count">File Counts</option>
           <option value="bytes">File Bytes</option>
           <option value="duration">File Duration</option>
         </select>
+        <div>
+          <label>Reverse Order: </label>
+          <input type="checkbox" name="ro" id="reverse_order" />
+        </div>
       </div>
-      <div id="query_report">
+
+      <div id="query_report"></div>
+
+      <div id="paging_controls" style="margin-top: 12px">
+        <button id="prev_page">Prev</button>
+        <span id="page_info"></span>
+        <button id="next_page">Next</button>
       </div>
     </div>
 
     <!-- JavaScript -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="{{ url_for('static', filename='scripts/script.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/queries.js') }}"></script>
   </body>
 </html>

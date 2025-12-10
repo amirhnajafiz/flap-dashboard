@@ -32,7 +32,7 @@ class Routes:
         session = self.__db.new_session()()
 
         base_query = (
-            select(IOLog.fname, func.count().label("count"))
+            select(IOLog.fname, func.count().label("value"))
             .where(IOLog.proc.is_(proc))
             .where(IOLog.event_name.is_not("close"))
             .group_by(IOLog.fname)
@@ -51,7 +51,7 @@ class Routes:
         count_subq = base_query.subquery()
         total = session.query(func.count()).select_from(count_subq).scalar()
 
-        ordering = desc("count") if desc_value == "true" else asc("count")
+        ordering = desc("value") if desc_value == "true" else asc("value")
 
         page_size = PAGE_SIZE
         offset = (page - 1) * page_size
@@ -84,7 +84,7 @@ class Routes:
         session = self.__db.new_session()()
 
         base_query = (
-            select(IOLog.fname, func.sum(IOLog.countbytes).label("total_bytes"))
+            select(IOLog.fname, func.sum(IOLog.countbytes).label("value"))
             .where(IOLog.proc.is_(proc))
             .where(IOLog.event_name.is_not("close"))
             .group_by(IOLog.fname)
@@ -103,7 +103,7 @@ class Routes:
         count_subq = base_query.subquery()
         total = session.query(func.count()).select_from(count_subq).scalar()
 
-        ordering = desc("total_bytes") if desc_value == "true" else asc("total_bytes")
+        ordering = desc("value") if desc_value == "true" else asc("value")
 
         page_size = PAGE_SIZE
         offset = (page - 1) * page_size
@@ -138,7 +138,7 @@ class Routes:
         base_query = (
             select(
                 IOLog.fname,
-                func.sum(IOLog.latency).label("total_duration"),
+                func.sum(IOLog.latency).label("value"),
             )
             .where(IOLog.proc.is_(proc))
             .where(IOLog.event_name.is_not("close"))
@@ -159,7 +159,7 @@ class Routes:
         total = session.query(func.count()).select_from(count_subq).scalar()
 
         ordering = (
-            desc("total_duration") if desc_value == "true" else asc("total_duration")
+            desc("value") if desc_value == "true" else asc("value")
         )
 
         page_size = PAGE_SIZE
