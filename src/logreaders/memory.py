@@ -1,15 +1,15 @@
-from src.database.models import BaseModel, IOLog
+from src.database.models import BaseModel, MemoryLog
 from src.logreaders import Reader
 
 
-class IOReader(Reader):
-    """IO reader reads and records io logs from `trace_io`."""
+class MemoryReader(Reader):
+    """Memory reader reads and records memory logs from `trace_memory`."""
 
     def name(self) -> str:
-        return "io"
+        return "memory"
 
     def log_file_pattern(self) -> str:
-        return "trace_io_*.log"
+        return "trace_memory_*.log"
 
     def build_record(self, obj: dict) -> BaseModel:
         # form the key
@@ -28,15 +28,13 @@ class IOReader(Reader):
         en_obj = self.memory.pop(key)
         ex_obj = obj
 
-        # check the fd and ret
-        fd = int(en_obj["spec"].get("fd", -1))
+        # check the ret
         ret = int(ex_obj["spec"].get("ret", -1))
-
-        if fd < 0 or ret < 0:
+        if ret < 0:
             return None
 
         # return an IOLog entry
-        return IOLog(
+        return MemoryLog(
             en_timestamp=int(en_obj["timestamp"]),
             en_datetime=en_obj["datetime"].isoformat(" "),
             ex_timestamp=int(ex_obj["timestamp"]),
@@ -46,7 +44,7 @@ class IOReader(Reader):
             tid=en_obj["tid"],
             proc=en_obj["proc"],
             event_name=en_obj["operand"],
-            fd=fd,
+            fd=int(en_obj["spec"].get("fd", -1)),
             ret=ret,
-            countbytes=int(en_obj["spec"].get("count", 0)),
+            length=int(en_obj["spec"].get("len", 0))
         )

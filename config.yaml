@@ -5,8 +5,8 @@ api:
 
 # service bootstrap configs (reading the initial logs)
 bootstrap:
-  enable: false
-  logs_path: "logs"
+  enable: true
+  logs_path: "logs/dumb"
   batch_size: 500
 
 # database configs (SQLite3)

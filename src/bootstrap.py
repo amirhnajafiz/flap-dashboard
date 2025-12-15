@@ -4,6 +4,7 @@ from src.database import Database
 from src.database.queries import UPDATE_IO_FNAME_VALUES, UPDATE_FD_FNAME_VALUES
 from src.logreaders.io import IOReader
 from src.logreaders.meta import MetaReader
+from src.logreaders.memory import MemoryReader
 from src.utils.files import import_time_references
 
 
@@ -47,6 +48,7 @@ def __process_readers(db: Database, dp: str, bs: int):
     readers = [
         MetaReader(dp, ref_mono, ref_wall, db, bs),
         IOReader(dp, ref_mono, ref_wall, db, bs),
+        MemoryReader(dp, ref_mono, ref_wall, db, bs),
     ]
 
     logging.info("running log readers")

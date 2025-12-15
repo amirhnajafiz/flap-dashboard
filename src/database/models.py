@@ -73,4 +73,5 @@ class MemoryLog(BaseModel, AsDictMixin):
     event_name = Column(String)
 
     fd = Column(Integer)
-    ret = Column(Integer)
+    ret = Column(BigInteger)
+    length = Column(Integer)
