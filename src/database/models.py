@@ -54,10 +54,10 @@ class IOLog(BaseModel, AsDictMixin):
     __table_args__ = (Index("idx_io_proc_fd_ts", "proc", "fd", "en_timestamp"),)
 
 
-class KprobeLog(BaseModel, AsDictMixin):
-    """A Kprobe log model is used to replay the kernel events."""
+class MemoryLog(BaseModel, AsDictMixin):
+    """A Memory log model is used to replay the memory events."""
 
-    __tablename__ = "kprobe_logs"
+    __tablename__ = "memory_logs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
 
@@ -71,3 +71,6 @@ class KprobeLog(BaseModel, AsDictMixin):
     tid = Column(Integer)
     proc = Column(String)
     event_name = Column(String)
+
+    fd = Column(Integer)
+    ret = Column(Integer)
