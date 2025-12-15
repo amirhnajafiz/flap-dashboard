@@ -12,18 +12,19 @@ class MetaReader(Reader):
         return "meta"
 
     def start(self) -> bool:
-        hashmap = {}  # map to merge log events
-        batch = []  # a list to store logs in batch
+        # variables to store logs and insert in batch
+        hashmap = {}
+        batch = []
+        limit = self.batch_size
 
-        # reader params
+        # list the log files related to this logreader
         files = list_files_by_regex(self.dir_path, "trace_meta_*.log")
 
         logging.debug(f"reader {self.name()}: files={len(files)}")
 
+        # loop over the files and insert them into the database
         for filepath in files:
             logging.debug(f"reader {self.name()} is reading {filepath}")
-
-            limit = self.batch_size
 
             # read the logs line by line
             with open(filepath, "r") as file:
@@ -39,6 +40,7 @@ class MetaReader(Reader):
                     # form the key
                     key = (obj["pid"], obj["tid"])
 
+                    # map the EN to EX objects
                     if obj["status"] == "EN":
                         hashmap[key] = obj
                     elif key in hashmap:
@@ -72,5 +74,6 @@ class MetaReader(Reader):
                         self.db.batch_insert(batch)
                         batch = []
 
-            if len(batch) > 0:
-                self.db.batch_insert(batch)
+        # final flush of the batched records
+        if len(batch) > 0:
+            self.db.batch_insert(batch)
