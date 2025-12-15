@@ -32,6 +32,7 @@ class Reader(ABC):
         self.dir_path = dir_path
         self.batch_size = batch_size
         self.db = db
+        self.memory = {}
 
         self.__ref_mono_ns = mono * 1e9
         self.__ref_wall_ns = wall * 1e9
@@ -101,7 +102,6 @@ class Reader(ABC):
     def start(self):
         """Start log processing."""
         # variables to store logs and insert in batch
-        hashmap = {}
         batch = []
         limit = self.batch_size
 
@@ -125,22 +125,8 @@ class Reader(ABC):
                     # convert it into an object
                     obj = self.parse_match_into_dictionary(m)
 
-                    # form the key
-                    key = self.make_key(obj)
-
-                    # map the EN to EX objects
-                    if obj["status"] == "EN":
-                        hashmap[key] = obj
-                        continue
-
-                    if key not in hashmap:
-                        continue
-
-                    # get the en object
-                    en_obj = hashmap.pop(key)
-
-                    # build a record using en and ex objects
-                    record = self.build_record(en_obj, obj)
+                    # call build record and if any records return, add them into the batch
+                    record = self.build_record(obj)
                     if record is not None:
                         batch.append(record)
 
@@ -167,19 +153,10 @@ class Reader(ABC):
         pass
 
     @classmethod
-    def make_key(self, obj: dict) -> tuple:
-        """Make key from the given object as tuple.
+    def build_record(self, obj: dict) -> BaseModel:
+        """Create a record from the given object.
 
-        :param obj: the input object
-        :return tuple: the key as tuple
-        """
-        pass
-
-    @classmethod
-    def build_record(self, en_obj: dict, ex_obj: dict) -> BaseModel:
-        """Form a record from two objects (each event has an entry and exit).
-
-        :param en_obj: entry object
-        :param ex_obj: exit object
+        :param obj: input object
+        :return BaseModel: a database model
         """
         pass

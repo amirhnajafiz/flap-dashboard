@@ -9,16 +9,31 @@ class MetaReader(Reader):
         return "meta"
 
     def log_file_pattern(self) -> str:
-        return "trace_io_*.log"
+        return "trace_meta_*.log"
 
-    def make_key(self, obj: dict) -> tuple:
-        return (obj["pid"], obj["tid"])
+    def build_record(self, obj: dict) -> BaseModel:
+        # form the key
+        key = (obj["pid"], obj["tid"])
 
-    def build_record(self, en_obj: dict, ex_obj: dict) -> BaseModel:
+        # map the EN to EX objects
+        if obj["status"] == "EN":
+            self.memory[key] = obj
+            return None
+
+        # drop none existing ones
+        if key not in self.memory:
+            return None
+
+        # get both start and end events
+        en_obj = self.memory.pop(key)
+        ex_obj = obj
+
+        # check the return status
         ret = int(ex_obj["spec"].get("ret", -1))
         if ret < 0:
             return None
 
+        # return a MetaLog entry
         return MetaLog(
             en_timestamp=int(en_obj["timestamp"]),
             en_datetime=en_obj["datetime"].isoformat(" "),
