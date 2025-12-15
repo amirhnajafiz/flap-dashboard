@@ -1,8 +1,10 @@
 import datetime
+import logging
 import re
 from abc import ABC
 
-from src.database import Database
+from src.database import BaseModel, Database
+from src.utils.files import list_files_by_regex
 
 
 class Reader(ABC):
@@ -95,17 +97,89 @@ class Reader(ABC):
             "operand": match.group("operand"),
             "spec": spec,
         }
-    
+
+    def start(self):
+        """Start log processing."""
+        # variables to store logs and insert in batch
+        hashmap = {}
+        batch = []
+        limit = self.batch_size
+
+        # list the log files related to this logreader
+        files = list_files_by_regex(self.dir_path, self.log_file_pattern())
+
+        logging.debug(f"reader {self.name()}: files={len(files)}")
+
+        # loop over files and read them
+        for filepath in files:
+            logging.debug(f"reader {self.name()} is reading {filepath}")
+
+            # read the logs line by line
+            with open(filepath, "r") as file:
+                for line in file:
+                    # read the line
+                    m = self.match_string(line)
+                    if not m:
+                        continue
+
+                    # convert it into an object
+                    obj = self.parse_match_into_dictionary(m)
+
+                    # form the key
+                    key = self.make_key(obj)
+
+                    # map the EN to EX objects
+                    if obj["status"] == "EN":
+                        hashmap[key] = obj
+                        continue
+
+                    if key not in hashmap:
+                        continue
+
+                    # get the en object
+                    en_obj = hashmap.pop(key)
+
+                    # build a record using en and ex objects
+                    record = self.build_record(en_obj, obj)
+                    if record is not None:
+                        batch.append(record)
+
+                    # flush batched records
+                    if len(batch) > limit:
+                        self.db.batch_insert(batch)
+                        batch = []
+
+        # final flush of the batched records
+        if len(batch) > 0:
+            self.db.batch_insert(batch)
+
     @classmethod
     def name(self) -> str:
         """Return the name of reader instance."""
         pass
 
     @classmethod
-    def start(self) -> tuple[bool, str]:
-        """Start log processing.
+    def log_file_pattern(self) -> str:
+        """Return the reader log file names pattern.
 
-        :return bool: true if any error happens
-        :return str: the error message
+        :return str: the regex
+        """
+        pass
+
+    @classmethod
+    def make_key(self, obj: dict) -> tuple:
+        """Make key from the given object as tuple.
+
+        :param obj: the input object
+        :return tuple: the key as tuple
+        """
+        pass
+
+    @classmethod
+    def build_record(self, en_obj: dict, ex_obj: dict) -> BaseModel:
+        """Form a record from two objects (each event has an entry and exit).
+
+        :param en_obj: entry object
+        :param ex_obj: exit object
         """
         pass

@@ -1,8 +1,5 @@
-import logging
-
-from src.database.models import MetaLog
+from src.database.models import BaseModel, MetaLog
 from src.logreaders import Reader
-from src.utils.files import list_files_by_regex
 
 
 class MetaReader(Reader):
@@ -11,69 +8,27 @@ class MetaReader(Reader):
     def name(self) -> str:
         return "meta"
 
-    def start(self) -> bool:
-        # variables to store logs and insert in batch
-        hashmap = {}
-        batch = []
-        limit = self.batch_size
+    def log_file_pattern(self) -> str:
+        return "trace_io_*.log"
 
-        # list the log files related to this logreader
-        files = list_files_by_regex(self.dir_path, "trace_meta_*.log")
+    def make_key(self, obj: dict) -> tuple:
+        return (obj["pid"], obj["tid"])
 
-        logging.debug(f"reader {self.name()}: files={len(files)}")
+    def build_record(self, en_obj: dict, ex_obj: dict) -> BaseModel:
+        ret = int(ex_obj["spec"].get("ret", -1))
+        if ret < 0:
+            return None
 
-        # loop over the files and insert them into the database
-        for filepath in files:
-            logging.debug(f"reader {self.name()} is reading {filepath}")
-
-            # read the logs line by line
-            with open(filepath, "r") as file:
-                for line in file:
-                    # read the line
-                    m = self.match_string(line)
-                    if not m:
-                        continue
-
-                    # convert it into an object
-                    obj = self.parse_match_into_dictionary(m)
-
-                    # form the key
-                    key = (obj["pid"], obj["tid"])
-
-                    # map the EN to EX objects
-                    if obj["status"] == "EN":
-                        hashmap[key] = obj
-                    elif key in hashmap:
-                        en_obj = hashmap[key]
-                        del hashmap[key]
-
-                        ret = int(obj["spec"].get("ret", -1))
-
-                        # exclude the negative records
-                        if ret > -1:
-                            batch.append(
-                                MetaLog(
-                                    en_timestamp=int(en_obj["timestamp"]),
-                                    en_datetime=en_obj["datetime"].isoformat(" "),
-                                    ex_timestamp=int(obj["timestamp"]),
-                                    ex_datetime=obj["datetime"].isoformat(" "),
-                                    latency=(
-                                        obj["datetime"] - en_obj["datetime"]
-                                    ).total_seconds()
-                                    * (10**9),
-                                    pid=obj["pid"],
-                                    tid=obj["tid"],
-                                    proc=obj["proc"],
-                                    event_name=obj["operand"],
-                                    fname=en_obj["spec"].get("fname", "unknown"),
-                                    ret=ret,
-                                )
-                            )
-
-                    if len(batch) > limit:
-                        self.db.batch_insert(batch)
-                        batch = []
-
-        # final flush of the batched records
-        if len(batch) > 0:
-            self.db.batch_insert(batch)
+        return MetaLog(
+            en_timestamp=int(en_obj["timestamp"]),
+            en_datetime=en_obj["datetime"].isoformat(" "),
+            ex_timestamp=int(ex_obj["timestamp"]),
+            ex_datetime=ex_obj["datetime"].isoformat(" "),
+            latency=(ex_obj["datetime"] - en_obj["datetime"]).total_seconds() * 1e9,
+            pid=en_obj["pid"],
+            tid=en_obj["tid"],
+            proc=en_obj["proc"],
+            event_name=en_obj["operand"],
+            fname=en_obj["spec"].get("fname", "unknown"),
+            ret=ret,
+        )
