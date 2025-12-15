@@ -1,14 +1,18 @@
+# http server configs
 api:
   port: 5050
   debug: false
 
+# service bootstrap configs (reading the initial logs)
 bootstrap:
   enable: false
   logs_path: "logs"
   batch_size: 500
 
+# database configs (SQLite3)
 database:
   path: "data.db"
 
+# logging configs
 logging:
   level: "debug"

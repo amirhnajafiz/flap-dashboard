@@ -52,3 +52,22 @@ class IOLog(BaseModel, AsDictMixin):
     fname = Column(Text)
 
     __table_args__ = (Index("idx_io_proc_fd_ts", "proc", "fd", "en_timestamp"),)
+
+
+class KprobeLog(BaseModel, AsDictMixin):
+    """A Kprobe log model is used to replay the kernel events."""
+
+    __tablename__ = "kprobe_logs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    en_timestamp = Column(BigInteger)
+    en_datetime = Column(Text)
+    ex_timestamp = Column(BigInteger)
+    ex_datetime = Column(BigInteger)
+    latency = Column(BigInteger)
+
+    pid = Column(Integer)
+    tid = Column(Integer)
+    proc = Column(String)
+    event_name = Column(String)

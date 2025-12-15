@@ -3,7 +3,7 @@ from src.logreaders import Reader
 
 
 class IOReader(Reader):
-    """IO reader reads and records io logs from `io_logs.txt`."""
+    """IO reader reads and records io logs from `trace_io`."""
 
     def name(self) -> str:
         return "io"

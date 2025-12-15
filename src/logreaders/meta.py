@@ -3,7 +3,7 @@ from src.logreaders import Reader
 
 
 class MetaReader(Reader):
-    """Meta reader reads and records meta logs from `meta_logs.txt`."""
+    """Meta reader reads and records meta logs from `trace_meta`."""
 
     def name(self) -> str:
         return "meta"
