@@ -75,3 +75,6 @@ class MemoryLog(BaseModel, AsDictMixin):
     fd = Column(Integer)
     ret = Column(BigInteger)
     length = Column(Integer)
+    fname = Column(Text)
+
+    __table_args__ = (Index("idx_memory_proc_fd_ts", "proc", "fd", "en_timestamp"),)
