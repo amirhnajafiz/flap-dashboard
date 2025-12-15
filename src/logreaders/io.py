@@ -1,8 +1,8 @@
 import logging
-from pathlib import Path
 
 from src.database.models import IOLog
 from src.logreaders import Reader
+from src.utils.files import list_files_by_regex
 
 
 class IOReader(Reader):
@@ -11,16 +11,12 @@ class IOReader(Reader):
     def name(self) -> str:
         return "io"
 
-    def get_log_files(self) -> list[str]:
-        root = Path(self.dir_path)
-        return [x for x in root.rglob("trace_io_*.log")]
-
     def start(self) -> bool:
         hashmap = {}  # map to merge log events
         batch = []  # a list to store IO logs in batch
 
         # reader params
-        files = self.get_log_files()
+        files = list_files_by_regex(self.dir_path, "trace_io_*.log")
 
         logging.debug(f"reader {self.name()}: files={len(files)}")
 

@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import sys
+from pathlib import Path
 
 
 def import_time_references(dir_path: str) -> tuple[float, float]:
@@ -23,3 +24,13 @@ def import_time_references(dir_path: str) -> tuple[float, float]:
     except Exception as e:
         logging.error(f"failed to import references: {e}")
         sys.exit(1)
+
+
+def list_files_by_regex(path: str, regex: str) -> list[str]:
+    """List files by a given regex from a directory path.
+
+    :param path: input directory path
+    :param regex: regex to filter
+    """
+    root = Path(path)
+    return [x for x in root.rglob(regex)]
