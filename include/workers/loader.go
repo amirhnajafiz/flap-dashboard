@@ -16,6 +16,9 @@ type loader struct {
 
 	// data directory path
 	dataPath string
+
+	// reductor channels
+	reductorChannels map[int]chan string
 }
 
 // begin the loader worker.
@@ -55,11 +58,12 @@ func (l loader) begin() error {
 		// each reader will read a partition of a file
 		go func(id int) {
 			r := reader{
-				id:        id,
-				offset:    int64(id) * int64(chunkSize),
-				chunkSize: int64(chunkSize),
-				fileSize:  size,
-				filePath:  path,
+				id:               id,
+				offset:           int64(id) * int64(chunkSize),
+				chunkSize:        int64(chunkSize),
+				fileSize:         size,
+				filePath:         path,
+				reductorChannels: l.reductorChannels,
 			}
 
 			defer wg.Done()

@@ -2,7 +2,6 @@ package workers
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"os"
 
@@ -23,6 +22,9 @@ type reader struct {
 
 	// target file
 	filePath string
+
+	// reductor channels
+	reductorChannels map[int]chan string
 }
 
 // start the reader worker.
@@ -80,7 +82,8 @@ func (r reader) start() {
 		if len(line) > 0 {
 			currentPos += int64(len(line))
 
-			fmt.Print(line)
+			// call the log handler
+			r.logHandler(line)
 
 			// if we passed the chunk end and finished a line, stop
 			if currentPos >= chunkEnd {
@@ -92,4 +95,11 @@ func (r reader) start() {
 			break
 		}
 	}
+}
+
+// In log handler, match with the regex and skip if not matched.
+// Else, extract and build the transfer packet [PartitionID, Key (proc, pid, tid), TS, Payload]
+// and send it to the distributor.
+func (r reader) logHandler(line string) {
+
 }
