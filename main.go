@@ -14,5 +14,5 @@ func main() {
 	logging.SetLogger(cfg.Logger.Level, cfg.Logger.JSON)
 
 	// start the workers
-	workers.Run(2)
+	workers.Run(cfg.NumberOfReaders)
 }

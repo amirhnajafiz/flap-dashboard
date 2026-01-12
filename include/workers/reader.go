@@ -5,43 +5,66 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"time"
 
 	"github.com/sirupsen/logrus"
 )
 
-// reader worker gets its data from the loader and passes it to
-// the reader-reductor distributer.
+// reader gets a file, offset, and chunkSize to read
+// a partition of a file and pass it's lines to the reader-reductor
+// distributor.
 type reader struct {
-	id       int
-	path     string
-	offset   int64
-	size     int64
-	fileSize int64
+	// unique id of the partition of the file
+	id int
+
+	// read parameters
+	offset    int64
+	chunkSize int64
+	fileSize  int64
+
+	// target file
+	filePath string
 }
 
 // start the reader worker.
 func (r reader) start() {
 	// open the log file
-	fd, err := os.Open(r.path)
+	fd, err := os.Open(r.filePath)
 	if err != nil {
-		logrus.Error(err)
+		logrus.WithFields(logrus.Fields{
+			"id":    r.id,
+			"error": err,
+			"path":  r.filePath,
+		}).Error("failed to open the target file")
+
+		return
 	}
 	defer fd.Close()
 
-	time.Sleep(time.Duration(r.id+1) * time.Second)
-	fmt.Printf("[reader %d] is reading from %d to %d\n", r.id, r.offset, r.offset+r.size)
+	logrus.WithFields(
+		logrus.Fields{
+			"id":    r.id,
+			"start": r.offset,
+			"end":   r.offset + r.chunkSize,
+		},
+	).Info("reader start")
 
 	// seek to chunk start
 	_, err = fd.Seek(r.offset, io.SeekStart)
 	if err != nil {
-		logrus.Error(err)
+		logrus.WithFields(logrus.Fields{
+			"id":    r.id,
+			"error": err,
+			"path":  r.filePath,
+		}).Error("seek to chunk start failed")
+
 		return
 	}
 
+	// create a reader of 64Kb size
 	reader := bufio.NewReaderSize(fd, 64*1024)
 
-	chunkEnd := r.offset + r.size
+	// set the parameters
+	chunkEnd := r.offset + r.chunkSize
 	var currentPos int64 = r.offset
 
 	// if not the first chunk, skip partial first line
@@ -59,7 +82,7 @@ func (r reader) start() {
 
 			fmt.Print(line)
 
-			// if we passed the chunk end AND finished a line, stop
+			// if we passed the chunk end and finished a line, stop
 			if currentPos >= chunkEnd {
 				break
 			}
