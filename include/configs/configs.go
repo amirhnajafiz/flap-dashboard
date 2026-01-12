@@ -26,9 +26,10 @@ type LoggerConfig struct {
 
 // Config hold the operator tune parameters.
 type Config struct {
-	NumberOfReaders int          `koanf:"number_of_readers"`
-	DataPath        string       `koanf:"data_path"`
-	Logger          LoggerConfig `koanf:"logger"`
+	NumberOfReaders   int          `koanf:"number_of_readers"`
+	NumberOfReductors int          `koanf:"number_of_reductors"`
+	DataPath          string       `koanf:"data_path"`
+	Logger            LoggerConfig `koanf:"logger"`
 }
 
 // LoadConfigs reads the config parameters from config.yml and env variables.
