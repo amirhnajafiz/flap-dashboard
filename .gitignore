@@ -1,90 +1,28 @@
-# Created by https://www.toptal.com/developers/gitignore/api/python,nwjs,vuejs,c
-# Edit at https://www.toptal.com/developers/gitignore?templates=python,nwjs,vuejs,c
+# Created by https://www.toptal.com/developers/gitignore/api/go,python
+# Edit at https://www.toptal.com/developers/gitignore?templates=go,python
 
-### C ###
-# Prerequisites
-*.d
-
-# Object files
-*.o
-*.ko
-*.obj
-*.elf
-
-# Linker output
-*.ilk
-*.map
-*.exp
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
-
-# Shared objects (inc. Windows DLLs)
+### Go ###
+# If you prefer the allow list template instead of the deny list, see community template:
+# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
+#
+# Binaries for programs and plugins
+*.exe
+*.exe~
 *.dll
 *.so
-*.so.*
 *.dylib
 
-# Executables
-*.exe
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
 *.out
-*.app
-*.i*86
-*.x86_64
-*.hex
 
-# Debug files
-*.dSYM/
-*.su
-*.idb
-*.pdb
+# Dependency directories (remove the comment below to include it)
+# vendor/
 
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
-
-### NWjs ###
-# gitignore template for NW.js projects
-# website: https://nwjs.io/
-
-# Seen in standard and sdk versions
-credits.html
-locales/
-libEGL.dll
-libGLEv2.dll
-node.dll
-nw.dll
-nw.exe
-natives_blob.bin
-nw_100_percent.pak
-nw_200_percent.pak
-nw_elf.dll
-snapshot_blob.bin
-resources.pak
-
-# Seen only in standard
-d3dcompiler_47.dll
-ffmpeg.dll
-icudtl.dat
-
-# Seen only in sdk
-pnacl/
-chromedriver.exe
-nacl_irt_x86_64.nexe
-nwjc.exe
-payload.exe
+# Go workspace file
+go.work
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
@@ -257,30 +195,14 @@ poetry.toml
 # LSP config files
 pyrightconfig.json
 
-### Vuejs ###
-# Recommended template: Node.gitignore
+# End of https://www.toptal.com/developers/gitignore/api/go,python
 
-node_modules/
-npm-debug.log
-yarn-error.log
-
-# End of https://www.toptal.com/developers/gitignore/api/python,nwjs,vuejs,c
+# Start of customized
 
 .vscode/
+.idea/
 .DS_Store
-.idea
-node_modules/
-*.code-workspace
-
+main
 data/
-logs/
-myven/
-myvenv/
-old/
-traces/
-counts.txt
-logs.txt
-vllm-logs.txt
-events.logs
-data.db
-datasets/
+
+# End of customized
