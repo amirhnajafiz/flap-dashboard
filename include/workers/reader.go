@@ -2,10 +2,20 @@ package workers
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"os"
+	"regexp"
+	"strconv"
+	"strings"
+
+	"github.com/amirhnajafiz/flak-dashboard/pkg/models"
 
 	"github.com/sirupsen/logrus"
+)
+
+var (
+	re = regexp.MustCompile(`^(\d+)\s+\{pid=(\d+)\s+tid=(\d+)\s+proc=([^\}]+)\}\{(EN|EX)\s+([^\}]+)\}(?:\{([^\}]*)\})?$`)
 )
 
 // reader gets a file, offset, and chunkSize to read
@@ -24,7 +34,7 @@ type reader struct {
 	filePath string
 
 	// reductor channels
-	reductorChannels map[int]chan string
+	reductorChannels map[int]chan models.Packet
 }
 
 // start the reader worker.
@@ -101,6 +111,45 @@ func (r reader) start() {
 // Else, extract and build the transfer packet [PartitionID, Key (proc, pid, tid), TS, Payload]
 // and send it to the distributor.
 func (r reader) logHandler(line string) {
-	key := len(line) % len(r.reductorChannels)
-	r.reductorChannels[key] <- line
+	line = strings.TrimSpace(line)
+	match := re.FindStringSubmatch(line)
+	if match == nil {
+		return
+	}
+
+	timestamp, _ := strconv.ParseInt(match[1], 10, 64)
+	pid, _ := strconv.Atoi(match[2])
+	tid, _ := strconv.Atoi(match[3])
+
+	// parse the key-value block
+	kv := make(map[string]string)
+	parts := strings.Split(match[6], " ")
+	for _, part := range parts {
+		kvPair := strings.SplitN(part, "=", 2)
+		if len(kvPair) == 2 {
+			kv[kvPair[0]] = kvPair[1]
+		}
+	}
+
+	// create a new event
+	event := models.TraceEvent{
+		Timestamp: timestamp,
+		PID:       pid,
+		TID:       tid,
+		Proc:      match[4],
+		Event:     match[5],
+		KV:        kv,
+	}
+
+	// create a packet
+	pkt := models.Packet{
+		PartitionID: r.id,
+		Key:         fmt.Sprintf("%d-%d-%s", event.PID, event.TID, event.Proc),
+		Payload:     event,
+		Raw:         line,
+	}
+
+	// find the reductor
+	index := len(pkt.Key) % len(r.reductorChannels)
+	r.reductorChannels[index] <- pkt
 }

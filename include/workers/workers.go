@@ -3,6 +3,8 @@ package workers
 import (
 	"fmt"
 
+	"github.com/amirhnajafiz/flak-dashboard/pkg/models"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -12,15 +14,15 @@ func Run(
 	reductors int,
 ) {
 	// communication channels
-	reductorChannels := make(map[int]chan string, reductors)
-	writerChannels := make(map[int]chan string, readers)
+	reductorChannels := make(map[int]chan models.Packet, reductors)
+	writerChannels := make(map[int]chan models.Packet, readers)
 
 	// start the writers
 	for i := range readers {
-		channel := make(chan string)
+		channel := make(chan models.Packet)
 		writerChannels[i] = channel
 
-		go func(id int, inputChannel chan string) {
+		go func(id int, inputChannel chan models.Packet) {
 			w := writer{
 				path:         fmt.Sprintf("data/%d.out", id),
 				inputChannel: inputChannel,
@@ -31,10 +33,10 @@ func Run(
 
 	// start the reductors
 	for i := range reductors {
-		channel := make(chan string)
+		channel := make(chan models.Packet)
 		reductorChannels[i] = channel
 
-		go func(inputChannel chan string) {
+		go func(inputChannel chan models.Packet) {
 			rd := reductor{
 				inputChannel:   inputChannel,
 				writerChannels: writerChannels,

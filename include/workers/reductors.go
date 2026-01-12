@@ -1,13 +1,14 @@
 package workers
 
+import "github.com/amirhnajafiz/flak-dashboard/pkg/models"
+
 type reductor struct {
-	inputChannel   chan string
-	writerChannels map[int]chan string
+	inputChannel   chan models.Packet
+	writerChannels map[int]chan models.Packet
 }
 
 func (r reductor) start() {
 	for data := range r.inputChannel {
-		key := len(data) % len(r.writerChannels)
-		r.writerChannels[key] <- data
+		r.writerChannels[data.PartitionID] <- data
 	}
 }

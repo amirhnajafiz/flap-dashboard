@@ -5,6 +5,8 @@ import (
 	"os"
 	"sync"
 
+	"github.com/amirhnajafiz/flak-dashboard/pkg/models"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -18,7 +20,7 @@ type loader struct {
 	dataPath string
 
 	// reductor channels
-	reductorChannels map[int]chan string
+	reductorChannels map[int]chan models.Packet
 }
 
 // begin the loader worker.

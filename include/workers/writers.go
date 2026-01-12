@@ -3,12 +3,14 @@ package workers
 import (
 	"os"
 
+	"github.com/amirhnajafiz/flak-dashboard/pkg/models"
+
 	"github.com/sirupsen/logrus"
 )
 
 type writer struct {
 	path         string
-	inputChannel chan string
+	inputChannel chan models.Packet
 }
 
 func (w writer) start() {
@@ -24,6 +26,6 @@ func (w writer) start() {
 	defer fd.Close()
 
 	for data := range w.inputChannel {
-		fd.Write([]byte(data))
+		fd.WriteString(data.Raw + "\n")
 	}
 }
