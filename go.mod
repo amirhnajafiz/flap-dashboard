@@ -8,6 +8,7 @@ require (
 	github.com/knadh/koanf/providers/file v1.2.1
 	github.com/knadh/koanf/providers/structs v1.0.0
 	github.com/knadh/koanf/v2 v2.3.0
+	github.com/sirupsen/logrus v1.9.3
 	github.com/tidwall/pretty v1.2.1
 )
 
