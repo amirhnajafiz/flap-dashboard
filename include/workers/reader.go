@@ -101,5 +101,6 @@ func (r reader) start() {
 // Else, extract and build the transfer packet [PartitionID, Key (proc, pid, tid), TS, Payload]
 // and send it to the distributor.
 func (r reader) logHandler(line string) {
-
+	key := len(line) % len(r.reductorChannels)
+	r.reductorChannels[key] <- line
 }

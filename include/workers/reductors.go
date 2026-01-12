@@ -1,7 +1,5 @@
 package workers
 
-import "fmt"
-
 type reductor struct {
 	inputChannel   chan string
 	writerChannels map[int]chan string
@@ -9,6 +7,7 @@ type reductor struct {
 
 func (r reductor) start() {
 	for data := range r.inputChannel {
-		fmt.Println(data)
+		key := len(data) % len(r.writerChannels)
+		r.writerChannels[key] <- data
 	}
 }

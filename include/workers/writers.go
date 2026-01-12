@@ -12,7 +12,7 @@ type writer struct {
 }
 
 func (w writer) start() {
-	fd, err := os.Open(w.path)
+	fd, err := os.Create(w.path)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"path":  w.path,
