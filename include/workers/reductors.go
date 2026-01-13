@@ -8,17 +8,19 @@ import (
 	"github.com/amirhnajafiz/flak-dashboard/pkg/models"
 )
 
-// reductor worker acts as the event reducer to group, modify, filter
-// and submit tracing events.
+// reductor job is to merge and submit tracing events to the writers.
 type reductor struct {
+	// map memory for merging
 	memory map[string]*models.Packet
 
-	terminationChannel chan int
-	inputChannel       chan models.Packet
-	writerChannels     map[int]chan models.Packet
-
+	// wait groups
 	readerReductorInFlightWg *sync.WaitGroup
 	reductorWriterInFlightWg *sync.WaitGroup
+
+	// channels
+	terminationChannel chan int
+	inputChannel       chan *models.Packet
+	writerChannels     map[int]chan *models.Packet
 }
 
 // start the reductor worker.
@@ -32,20 +34,20 @@ func (r *reductor) start() {
 
 			// check if there is a match
 			if val, ok := r.memory[pkt.TraceKey]; ok {
-				var mPkt *models.Packet
+				var mergedPkt *models.Packet
 				if val.TraceEvent.EventType == "EN" {
-					mPkt = r.merge(val, &pkt)
+					mergedPkt = r.merge(val, pkt)
 				} else {
-					mPkt = r.merge(&pkt, val)
+					mergedPkt = r.merge(pkt, val)
 				}
 
 				r.reductorWriterInFlightWg.Add(1)
-				r.writerChannels[mPkt.PartitionIndex] <- *mPkt
+				r.writerChannels[mergedPkt.PartitionIndex] <- mergedPkt
 
 				delete(r.memory, pkt.TraceKey)
 			} else {
 				// save the packet into memory if no match
-				r.memory[pkt.TraceKey] = &pkt
+				r.memory[pkt.TraceKey] = pkt
 			}
 		}
 	}

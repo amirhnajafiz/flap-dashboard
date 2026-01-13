@@ -1,45 +1,40 @@
 package workers
 
 import (
+	"fmt"
 	"os"
 	"sync"
 
 	"github.com/amirhnajafiz/flak-dashboard/pkg/models"
-
-	"github.com/sirupsen/logrus"
 )
 
 // writer worker submits the events by writing them into files.
-// each writer writes into a single file. the number of writers
-// is equal to the number of readers, and they match by partition id.
+// each writer writes into a single file.
 type writer struct {
+	// file
 	path string
 
-	termincationChannel chan int
-	inputChannel        chan models.Packet
-
+	// wait groups
 	reductorWriterInFlightWg *sync.WaitGroup
+
+	// channels
+	termincationChannel chan int
+	inputChannel        chan *models.Packet
 }
 
 // start the writer worker.
-func (w *writer) start() {
-	// open the output file.
+func (w *writer) start() error {
+	// open the output file
 	fd, err := os.Create(w.path)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"path":  w.path,
-			"error": err,
-		}).Error("failed to open file")
-
-		return
+		return fmt.Errorf("failed to open file: %v", err)
 	}
 	defer fd.Close()
 
-	// get and write trace events into a file
 	for {
 		select {
 		case <-w.termincationChannel:
-			return
+			return nil
 		case pkt := <-w.inputChannel:
 			w.reductorWriterInFlightWg.Done()
 			fd.WriteString(pkt.TraceEvent.ToStr() + "\n")

@@ -9,21 +9,21 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// Run the workers.
+// Run the workers (writers first, reductors, and finally readers).
 func Run(
 	numberOfReaders int,
 	numberOfReductors int,
 	file *models.File,
 ) {
 	// communication channels: writers
-	writerChannels := make(map[int]chan models.Packet, numberOfReaders)
+	writerChannels := make(map[int]chan *models.Packet, numberOfReaders)
 	writerTerminationChannels := make(map[int]chan int, numberOfReaders)
 
 	// communication channels: reductors
-	reductorChannels := make(map[int]chan models.Packet, numberOfReductors)
+	reductorChannels := make(map[int]chan *models.Packet, numberOfReductors)
 	reductorTerminationChannels := make(map[int]chan int, numberOfReductors)
 
-	// create waitgroups
+	// waitgroups
 	var (
 		readersWg                sync.WaitGroup
 		reductorsWg              sync.WaitGroup
@@ -36,7 +36,7 @@ func Run(
 	for i := range numberOfReaders {
 		writersWg.Add(1)
 
-		writerChannels[i] = make(chan models.Packet)
+		writerChannels[i] = make(chan *models.Packet)
 		writerTerminationChannels[i] = make(chan int)
 
 		go func(id int) {
@@ -53,13 +53,16 @@ func Run(
 		}(i)
 	}
 
-	logrus.WithField("writers", numberOfReaders).Info("writers start")
+	logrus.WithFields(logrus.Fields{
+		"count": numberOfReaders,
+		"file":  file.Name,
+	}).Info("writers start")
 
 	// start the reductors
 	for i := range numberOfReductors {
 		reductorsWg.Add(1)
 
-		reductorChannels[i] = make(chan models.Packet)
+		reductorChannels[i] = make(chan *models.Packet)
 		reductorTerminationChannels[i] = make(chan int)
 
 		go func(id int) {
@@ -78,7 +81,10 @@ func Run(
 		}(i)
 	}
 
-	logrus.WithField("reductors", numberOfReductors).Info("reductors start")
+	logrus.WithFields(logrus.Fields{
+		"count": numberOfReductors,
+		"file":  file.Name,
+	}).Info("reductors start")
 
 	// start the readers
 	for i := range numberOfReaders {
@@ -101,10 +107,17 @@ func Run(
 		}(i)
 	}
 
-	logrus.WithField("readers", numberOfReaders).Info("readers start")
+	logrus.WithFields(logrus.Fields{
+		"count": numberOfReaders,
+		"file":  file.Name,
+	}).Info("readers start")
 
 	// wait for the readers
 	readersWg.Wait()
+
+	logrus.WithFields(logrus.Fields{
+		"file": file.Name,
+	}).Info("readers finished")
 
 	// wait for the reader-reductor in flight events
 	readerReductorInFlightWg.Wait()
@@ -115,6 +128,10 @@ func Run(
 	}
 	reductorsWg.Wait()
 
+	logrus.WithFields(logrus.Fields{
+		"file": file.Name,
+	}).Info("reductors finished")
+
 	// wait for the reductor-writer in flight events
 	reductorWriterInFlightWg.Wait()
 
@@ -124,5 +141,7 @@ func Run(
 	}
 	writersWg.Wait()
 
-	logrus.Info("workers finished")
+	logrus.WithFields(logrus.Fields{
+		"file": file.Name,
+	}).Info("writers finished")
 }

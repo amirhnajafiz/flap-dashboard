@@ -24,7 +24,7 @@ type reader struct {
 	id                       int
 	numberOfReductors        int
 	readerReductorInFlightWg *sync.WaitGroup
-	reductorChannels         map[int]chan models.Packet
+	reductorChannels         map[int]chan *models.Packet
 
 	// read parameters
 	offset    int64
@@ -114,7 +114,7 @@ func (r *reader) logHandler(line string) {
 	}
 
 	// create a packet
-	pkt := models.Packet{
+	pkt := &models.Packet{
 		PartitionIndex: r.id,
 		PartitionName:  r.filePath,
 		TraceKey:       fmt.Sprintf("%d-%d-%s-%s", pid, tid, match[4], match[6]),
