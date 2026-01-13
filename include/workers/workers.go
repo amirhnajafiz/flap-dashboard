@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/amirhnajafiz/flak-dashboard/pkg/models"
+	"github.com/amirhnajafiz/flak-dashboard/pkg/sorting"
 
 	"github.com/sirupsen/logrus"
 )
@@ -15,6 +16,14 @@ func Run(
 	numberOfReductors int,
 	file *models.File,
 ) {
+	// sort the file first
+	if err := sorting.SortFile(file.Path); err != nil {
+		logrus.WithFields(logrus.Fields{
+			"path":  file.Path,
+			"error": err,
+		}).Panic("failed to sort")
+	}
+
 	// communication channels: writers
 	writerChannels := make(map[int]chan *models.Packet, numberOfReaders)
 	writerTerminationChannels := make(map[int]chan int, numberOfReaders)
