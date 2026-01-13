@@ -40,7 +40,7 @@ type reader struct {
 }
 
 // start the reader worker.
-func (r reader) start() {
+func (r *reader) start() {
 	// open the log file
 	fd, err := os.Open(r.filePath)
 	if err != nil {
@@ -114,7 +114,7 @@ func (r reader) start() {
 
 // In log handler, match with the regex and skip if not matched.
 // Else, extract and build the transfer packet and send it to the distributor.
-func (r reader) logHandler(line string) {
+func (r *reader) logHandler(line string) {
 	line = strings.TrimSpace(line)
 	match := re.FindStringSubmatch(line)
 	if match == nil {
@@ -163,7 +163,7 @@ func (r reader) logHandler(line string) {
 
 // post hook function sends an end of events packet to the first reductor.
 // the reductor then passes the event to a writer based on partition index.
-func (r reader) postHook() {
+func (r *reader) postHook() {
 	pkt := models.Packet{
 		EOE:            true,
 		PartitionIndex: r.id,

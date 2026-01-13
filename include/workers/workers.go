@@ -11,19 +11,25 @@ import (
 
 // Run the workers.
 func Run(
-	readers int,
-	reductors int,
+	numberOfReaders int,
+	numberOfReductors int,
+	file *models.File,
 ) {
 	// communication channels
-	reductorChannels := make(map[int]chan models.Packet, reductors)
-	writerChannels := make(map[int]chan models.Packet, readers)
+	reductorTerminationChannels := make(map[int]chan int, numberOfReductors)
+	reductorChannels := make(map[int]chan models.Packet, numberOfReductors)
+	writerChannels := make(map[int]chan models.Packet, numberOfReaders)
 
-	// create a waitgroup for writers
+	// create a waitgroup for reader and writer go-routines (readers + writers)
 	var wg sync.WaitGroup
-	wg.Add(readers)
+	wg.Add(2 * numberOfReaders)
+
+	// create a waitgroup for reductors
+	var middleWg sync.WaitGroup
+	middleWg.Add(numberOfReductors)
 
 	// start the writers
-	for i := range readers {
+	for i := range numberOfReaders {
 		channel := make(chan models.Packet)
 		writerChannels[i] = channel
 
@@ -31,49 +37,72 @@ func Run(
 			defer wg.Done()
 
 			w := writer{
-				path:         fmt.Sprintf("data/%d.out", id),
+				path:         fmt.Sprintf("%s/%d.out", file.OutputDir, id),
 				inputChannel: inputChannel,
 			}
 			w.start()
+
+			close(inputChannel)
 		}(i, channel)
 	}
 
-	logrus.WithField("writers", readers).Info("writers start")
+	logrus.WithField("writers", numberOfReaders).Info("writers start")
 
 	// start the reductors
-	for i := range reductors {
+	for i := range numberOfReductors {
 		channel := make(chan models.Packet)
-		reductorChannels[i] = channel
+		tchannel := make(chan int)
 
-		go func(inputChannel chan models.Packet) {
+		reductorChannels[i] = channel
+		reductorTerminationChannels[i] = tchannel
+
+		go func(inputChannel chan models.Packet, termChannel chan int) {
+			defer middleWg.Done()
+
 			rd := reductor{
-				memory:         make(map[string]*models.Packet),
-				inputChannel:   inputChannel,
-				writerChannels: writerChannels,
+				memory:             make(map[string]*models.Packet),
+				inputChannel:       inputChannel,
+				writerChannels:     writerChannels,
+				terminationChannel: termChannel,
 			}
 			rd.start()
-		}(channel)
+
+			close(inputChannel)
+		}(channel, tchannel)
 	}
 
-	logrus.WithField("reductors", reductors).Info("reductors start")
+	logrus.WithField("reductors", numberOfReductors).Info("reductors start")
 
-	// create and call the loader
-	l := loader{
-		dataPath:         "data",
-		numberOfReaders:  readers,
-		reductorChannels: reductorChannels,
+	// start the writers
+	for i := range numberOfReaders {
+		go func(id int) {
+			defer wg.Done()
+
+			r := reader{
+				id:                id,
+				offset:            int64(id) * int64(file.ChunkSize),
+				chunkSize:         int64(file.ChunkSize),
+				fileSize:          file.FileSize,
+				filePath:          file.Path,
+				reductorChannels:  reductorChannels,
+				numberOfReductors: numberOfReductors,
+			}
+			r.start()
+		}(i)
 	}
 
-	logrus.Info("loader start")
+	logrus.WithField("readers", numberOfReaders).Info("readers start")
 
-	if err := l.begin(); err != nil {
-		logrus.Error(err)
-	}
-
-	logrus.Info("loader finished")
-
-	// wait for all writers
+	// wait for readers and writers
 	wg.Wait()
+
+	// send terminate signal to all reductors
+	for _, channel := range reductorTerminationChannels {
+		channel <- 1
+	}
+
+	// wait for reductors
+	middleWg.Wait()
 
 	logrus.Info("workers finished")
 }

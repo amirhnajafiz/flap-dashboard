@@ -17,7 +17,7 @@ type writer struct {
 }
 
 // start the writer worker.
-func (w writer) start() {
+func (w *writer) start() {
 	// open the output file.
 	fd, err := os.Create(w.path)
 	if err != nil {
