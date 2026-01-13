@@ -21,6 +21,10 @@ type reductor struct {
 	terminationChannel chan int
 	inputChannel       chan *models.Packet
 	writerChannels     map[int]chan *models.Packet
+
+	// validations params
+	readLogs int
+	sentLogs int
 }
 
 // start the reductor worker.
@@ -31,6 +35,7 @@ func (r *reductor) start() {
 			return
 		case pkt := <-r.inputChannel:
 			r.readerReductorInFlightWg.Done()
+			r.readLogs++
 
 			// check if there is a match
 			if val, ok := r.memory[pkt.TraceKey]; ok {
@@ -43,6 +48,7 @@ func (r *reductor) start() {
 
 				r.reductorWriterInFlightWg.Add(1)
 				r.writerChannels[mergedPkt.PartitionIndex] <- mergedPkt
+				r.sentLogs++
 
 				delete(r.memory, pkt.TraceKey)
 			} else {

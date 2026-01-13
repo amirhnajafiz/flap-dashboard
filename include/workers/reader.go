@@ -31,6 +31,10 @@ type reader struct {
 	chunkSize int64
 	fileSize  int64
 	filePath  string
+
+	// validation params
+	readLogs int
+	sentLogs int
 }
 
 // start the reader worker.
@@ -66,6 +70,8 @@ func (r *reader) start() error {
 	// read the partition line by line
 	for {
 		line, err := reader.ReadString('\n')
+		r.readLogs++
+
 		if len(line) > 0 {
 			currentPos += int64(len(line))
 
@@ -136,4 +142,5 @@ func (r *reader) logHandler(line string) {
 	// submit the event
 	r.readerReductorInFlightWg.Add(1)
 	r.reductorChannels[index] <- pkt
+	r.sentLogs++
 }

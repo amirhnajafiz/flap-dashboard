@@ -20,6 +20,9 @@ type writer struct {
 	// channels
 	termincationChannel chan int
 	inputChannel        chan *models.Packet
+
+	// validation params
+	sentLogs int
 }
 
 // start the writer worker.
@@ -37,6 +40,8 @@ func (w *writer) start() error {
 			return nil
 		case pkt := <-w.inputChannel:
 			w.reductorWriterInFlightWg.Done()
+			w.sentLogs++
+
 			fd.WriteString(pkt.TraceEvent.ToStr() + "\n")
 		}
 	}

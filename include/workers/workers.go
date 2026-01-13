@@ -32,6 +32,16 @@ func Run(
 		reductorWriterInFlightWg sync.WaitGroup
 	)
 
+	// validation parameters
+	var (
+		readersReadLogs   = 0
+		readersSentLogs   = 0
+		reductorsReadLogs = 0
+		reductorsSentLogs = 0
+		writerSentLogs    = 0
+		statLock          sync.Mutex
+	)
+
 	// start the writers
 	for i := range numberOfReaders {
 		writersWg.Add(1)
@@ -43,13 +53,28 @@ func Run(
 			defer close(writerChannels[id])
 			defer writersWg.Done()
 
+			path := fmt.Sprintf("%s/%d.out", file.OutputDir, id)
+
 			w := writer{
-				path:                     fmt.Sprintf("%s/%d.out", file.OutputDir, id),
+				sentLogs:                 0,
+				path:                     path,
 				inputChannel:             writerChannels[id],
 				termincationChannel:      writerTerminationChannels[id],
 				reductorWriterInFlightWg: &reductorWriterInFlightWg,
 			}
-			w.start()
+
+			if err := w.start(); err != nil {
+				logrus.WithFields(logrus.Fields{
+					"path":  path,
+					"id":    id,
+					"error": err,
+				}).Panic("writer failed")
+			}
+
+			// update stats
+			statLock.Lock()
+			writerSentLogs += w.sentLogs
+			statLock.Unlock()
 		}(i)
 	}
 
@@ -70,6 +95,8 @@ func Run(
 			defer reductorsWg.Done()
 
 			rd := reductor{
+				readLogs:                 0,
+				sentLogs:                 0,
 				memory:                   make(map[string]*models.Packet),
 				inputChannel:             reductorChannels[i],
 				terminationChannel:       reductorTerminationChannels[i],
@@ -78,6 +105,12 @@ func Run(
 				reductorWriterInFlightWg: &reductorWriterInFlightWg,
 			}
 			rd.start()
+
+			// update stats
+			statLock.Lock()
+			reductorsReadLogs += rd.readLogs
+			reductorsSentLogs += rd.sentLogs
+			statLock.Unlock()
 		}(i)
 	}
 
@@ -99,11 +132,25 @@ func Run(
 				chunkSize:                int64(file.ChunkSize),
 				fileSize:                 file.FileSize,
 				filePath:                 file.Path,
+				readLogs:                 0,
+				sentLogs:                 0,
 				reductorChannels:         reductorChannels,
 				numberOfReductors:        numberOfReductors,
 				readerReductorInFlightWg: &readerReductorInFlightWg,
 			}
-			r.start()
+			if err := r.start(); err != nil {
+				logrus.WithFields(logrus.Fields{
+					"path":  file.Path,
+					"id":    id,
+					"error": err,
+				}).Panic("writer failed")
+			}
+
+			// update stats
+			statLock.Lock()
+			readersReadLogs += r.readLogs
+			readersSentLogs += r.sentLogs
+			statLock.Unlock()
 		}(i)
 	}
 
@@ -144,4 +191,14 @@ func Run(
 	logrus.WithFields(logrus.Fields{
 		"file": file.Name,
 	}).Info("writers finished")
+
+	// print validation information
+	logrus.WithFields(logrus.Fields{
+		"file":                file.Name,
+		"readers read logs":   readersReadLogs,
+		"readers sent logs":   readersSentLogs,
+		"reductors read logs": reductorsReadLogs,
+		"reductors sent logs": reductorsSentLogs,
+		"writers wrote logs":  writerSentLogs,
+	}).Info("logs stored")
 }
