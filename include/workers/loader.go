@@ -3,7 +3,6 @@ package workers
 import (
 	"fmt"
 	"os"
-	"sync"
 
 	"github.com/amirhnajafiz/flak-dashboard/pkg/models"
 
@@ -49,11 +48,7 @@ func (l loader) begin() error {
 		"size":       size,
 		"chunk_size": chunkSize,
 		"readers":    l.numberOfReaders,
-	})
-
-	// create a wait group for each reader
-	var wg sync.WaitGroup
-	wg.Add(l.numberOfReaders)
+	}).Info("readers start")
 
 	// create and start readers
 	for index := 0; index < l.numberOfReaders; index++ {
@@ -67,13 +62,9 @@ func (l loader) begin() error {
 				filePath:         path,
 				reductorChannels: l.reductorChannels,
 			}
-
-			defer wg.Done()
 			r.start()
 		}(index)
 	}
-
-	wg.Wait()
 
 	return nil
 }

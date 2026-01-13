@@ -8,12 +8,17 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// writer worker submits the events by writing them into files.
+// each writer writes into a single file. the number of writers
+// is equal to the number of readers, and they match by partition id.
 type writer struct {
 	path         string
 	inputChannel chan models.Packet
 }
 
+// start the writer worker.
 func (w writer) start() {
+	// open the output file.
 	fd, err := os.Create(w.path)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
@@ -25,7 +30,12 @@ func (w writer) start() {
 	}
 	defer fd.Close()
 
-	for data := range w.inputChannel {
-		fd.WriteString(data.Raw + "\n")
+	// get and write trace events into a file
+	for pkt := range w.inputChannel {
+		if pkt.EOE {
+			break
+		}
+
+		fd.WriteString(pkt.TraceEventRaw + "\n")
 	}
 }

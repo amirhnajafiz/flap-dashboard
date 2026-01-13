@@ -15,7 +15,4 @@ func main() {
 
 	// start the workers
 	workers.Run(cfg.NumberOfReaders, cfg.NumberOfReductors)
-
-	for {
-	}
 }

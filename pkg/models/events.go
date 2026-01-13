@@ -1,5 +1,6 @@
 package models
 
+// TraceEvent models a log entry.
 type TraceEvent struct {
 	Timestamp int64
 	PID       int

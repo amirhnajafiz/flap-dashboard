@@ -2,6 +2,7 @@ package workers
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/amirhnajafiz/flak-dashboard/pkg/models"
 
@@ -17,12 +18,18 @@ func Run(
 	reductorChannels := make(map[int]chan models.Packet, reductors)
 	writerChannels := make(map[int]chan models.Packet, readers)
 
+	// create a waitgroup for writers
+	var wg sync.WaitGroup
+	wg.Add(readers)
+
 	// start the writers
 	for i := range readers {
 		channel := make(chan models.Packet)
 		writerChannels[i] = channel
 
 		go func(id int, inputChannel chan models.Packet) {
+			defer wg.Done()
+
 			w := writer{
 				path:         fmt.Sprintf("data/%d.out", id),
 				inputChannel: inputChannel,
@@ -30,6 +37,8 @@ func Run(
 			w.start()
 		}(i, channel)
 	}
+
+	logrus.WithField("writers", readers).Info("writers start")
 
 	// start the reductors
 	for i := range reductors {
@@ -45,6 +54,8 @@ func Run(
 		}(channel)
 	}
 
+	logrus.WithField("reductors", reductors).Info("reductors start")
+
 	// create and call the loader
 	l := loader{
 		dataPath:         "data",
@@ -57,4 +68,11 @@ func Run(
 	if err := l.begin(); err != nil {
 		logrus.Error(err)
 	}
+
+	logrus.Info("loader finished")
+
+	// wait for all writers
+	wg.Wait()
+
+	logrus.Info("workers finished")
 }

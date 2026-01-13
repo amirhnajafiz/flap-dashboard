@@ -15,12 +15,12 @@ import (
 )
 
 var (
+	// Regex for parsing the log entries.
 	re = regexp.MustCompile(`^(\d+)\s+\{pid=(\d+)\s+tid=(\d+)\s+proc=([^\}]+)\}\{(EN|EX)\s+([^\}]+)\}(?:\{([^\}]*)\})?$`)
 )
 
-// reader gets a file, offset, and chunkSize to read
-// a partition of a file and pass it's lines to the reader-reductor
-// distributor.
+// reader gets a file, offset, and chunkSize to read a partition of a file and pass
+// it's lines to the reader-reductor distributor.
 type reader struct {
 	// unique id of the partition of the file
 	id int
@@ -105,11 +105,13 @@ func (r reader) start() {
 			break
 		}
 	}
+
+	// send an EOE packet
+	r.postHook()
 }
 
 // In log handler, match with the regex and skip if not matched.
-// Else, extract and build the transfer packet [PartitionID, Key (proc, pid, tid), TS, Payload]
-// and send it to the distributor.
+// Else, extract and build the transfer packet and send it to the distributor.
 func (r reader) logHandler(line string) {
 	line = strings.TrimSpace(line)
 	match := re.FindStringSubmatch(line)
@@ -143,13 +145,26 @@ func (r reader) logHandler(line string) {
 
 	// create a packet
 	pkt := models.Packet{
-		PartitionID: r.id,
-		Key:         fmt.Sprintf("%d-%d-%s", event.PID, event.TID, event.Proc),
-		Payload:     event,
-		Raw:         line,
+		EOE:            false,
+		PartitionIndex: r.id,
+		PartitionName:  r.filePath,
+		TraceKey:       fmt.Sprintf("%d-%d-%s", event.PID, event.TID, event.Proc),
+		TraceEvent:     event,
+		TraceEventRaw:  line,
 	}
 
 	// find the reductor
-	index := len(pkt.Key) % len(r.reductorChannels)
+	index := len(pkt.TraceKey) % len(r.reductorChannels)
 	r.reductorChannels[index] <- pkt
+}
+
+// post hook function sends an end of events packet to the first reductor.
+// the reductor then passes the event to a writer based on partition index.
+func (r reader) postHook() {
+	pkt := models.Packet{
+		EOE:            true,
+		PartitionIndex: r.id,
+	}
+
+	r.reductorChannels[0] <- pkt
 }
