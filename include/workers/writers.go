@@ -36,6 +36,6 @@ func (w writer) start() {
 			break
 		}
 
-		fd.WriteString(pkt.TraceEventRaw + "\n")
+		fd.WriteString(pkt.TraceEvent.ToStr() + "\n")
 	}
 }

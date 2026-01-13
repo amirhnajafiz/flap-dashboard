@@ -47,6 +47,7 @@ func Run(
 
 		go func(inputChannel chan models.Packet) {
 			rd := reductor{
+				memory:         make(map[string]*models.Packet),
 				inputChannel:   inputChannel,
 				writerChannels: writerChannels,
 			}

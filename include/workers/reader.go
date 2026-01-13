@@ -125,7 +125,7 @@ func (r reader) logHandler(line string) {
 
 	// parse the key-value block
 	kv := make(map[string]string)
-	parts := strings.Split(match[6], " ")
+	parts := strings.Split(match[7], " ")
 	for _, part := range parts {
 		kvPair := strings.SplitN(part, "=", 2)
 		if len(kvPair) == 2 {
@@ -139,7 +139,8 @@ func (r reader) logHandler(line string) {
 		PID:       pid,
 		TID:       tid,
 		Proc:      match[4],
-		Event:     match[5],
+		EventType: match[5],
+		Event:     match[6],
 		KV:        kv,
 	}
 
@@ -148,7 +149,7 @@ func (r reader) logHandler(line string) {
 		EOE:            false,
 		PartitionIndex: r.id,
 		PartitionName:  r.filePath,
-		TraceKey:       fmt.Sprintf("%d-%d-%s", event.PID, event.TID, event.Proc),
+		TraceKey:       fmt.Sprintf("%d-%d-%s-%s", event.PID, event.TID, event.Proc, event.Event),
 		TraceEvent:     event,
 		TraceEventRaw:  line,
 	}
