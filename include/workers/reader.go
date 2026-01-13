@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/amirhnajafiz/flak-dashboard/pkg/hashing"
 	"github.com/amirhnajafiz/flak-dashboard/pkg/models"
@@ -37,6 +38,9 @@ type reader struct {
 	// reductor channels
 	reductorChannels  map[int]chan models.Packet
 	numberOfReductors int
+
+	// wg
+	readerReductorInFlightWg *sync.WaitGroup
 }
 
 // start the reader worker.
@@ -154,5 +158,8 @@ func (r *reader) logHandler(line string) {
 
 	// find the reductor
 	index := hashing.HashToRange(pkt.TraceKey, uint64(r.numberOfReductors))
+
+	// submit the event
+	r.readerReductorInFlightWg.Add(1)
 	r.reductorChannels[index] <- pkt
 }

@@ -3,6 +3,7 @@ package workers
 import (
 	"fmt"
 	"maps"
+	"sync"
 
 	"github.com/amirhnajafiz/flak-dashboard/pkg/models"
 )
@@ -15,6 +16,9 @@ type reductor struct {
 	terminationChannel chan int
 	inputChannel       chan models.Packet
 	writerChannels     map[int]chan models.Packet
+
+	readerReductorInFlightWg *sync.WaitGroup
+	reductorWriterInFlightWg *sync.WaitGroup
 }
 
 // start the reductor worker.
@@ -24,6 +28,8 @@ func (r *reductor) start() {
 		case <-r.terminationChannel:
 			return
 		case pkt := <-r.inputChannel:
+			r.readerReductorInFlightWg.Done()
+
 			// check if there is a match
 			if val, ok := r.memory[pkt.TraceKey]; ok {
 				var mPkt *models.Packet
@@ -33,7 +39,9 @@ func (r *reductor) start() {
 					mPkt = r.merge(&pkt, val)
 				}
 
+				r.reductorWriterInFlightWg.Add(1)
 				r.writerChannels[mPkt.PartitionIndex] <- *mPkt
+
 				delete(r.memory, pkt.TraceKey)
 			} else {
 				// save the packet into memory if no match

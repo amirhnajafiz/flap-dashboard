@@ -44,9 +44,10 @@ func Run(
 			defer writersWg.Done()
 
 			w := writer{
-				path:                fmt.Sprintf("%s/%d.out", file.OutputDir, id),
-				inputChannel:        writerChannels[id],
-				termincationChannel: writerTerminationChannels[id],
+				path:                     fmt.Sprintf("%s/%d.out", file.OutputDir, id),
+				inputChannel:             writerChannels[id],
+				termincationChannel:      writerTerminationChannels[id],
+				reductorWriterInFlightWg: &reductorWriterInFlightWg,
 			}
 			w.start()
 		}(i)
@@ -66,10 +67,12 @@ func Run(
 			defer reductorsWg.Done()
 
 			rd := reductor{
-				memory:             make(map[string]*models.Packet),
-				inputChannel:       reductorChannels[i],
-				terminationChannel: reductorTerminationChannels[i],
-				writerChannels:     writerChannels,
+				memory:                   make(map[string]*models.Packet),
+				inputChannel:             reductorChannels[i],
+				terminationChannel:       reductorTerminationChannels[i],
+				writerChannels:           writerChannels,
+				readerReductorInFlightWg: &readerReductorInFlightWg,
+				reductorWriterInFlightWg: &reductorWriterInFlightWg,
 			}
 			rd.start()
 		}(i)
@@ -85,13 +88,14 @@ func Run(
 			defer readersWg.Done()
 
 			r := reader{
-				id:                id,
-				offset:            int64(id) * int64(file.ChunkSize),
-				chunkSize:         int64(file.ChunkSize),
-				fileSize:          file.FileSize,
-				filePath:          file.Path,
-				reductorChannels:  reductorChannels,
-				numberOfReductors: numberOfReductors,
+				id:                       id,
+				offset:                   int64(id) * int64(file.ChunkSize),
+				chunkSize:                int64(file.ChunkSize),
+				fileSize:                 file.FileSize,
+				filePath:                 file.Path,
+				reductorChannels:         reductorChannels,
+				numberOfReductors:        numberOfReductors,
+				readerReductorInFlightWg: &readerReductorInFlightWg,
 			}
 			r.start()
 		}(i)

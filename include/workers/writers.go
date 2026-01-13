@@ -2,6 +2,7 @@ package workers
 
 import (
 	"os"
+	"sync"
 
 	"github.com/amirhnajafiz/flak-dashboard/pkg/models"
 
@@ -16,6 +17,8 @@ type writer struct {
 
 	termincationChannel chan int
 	inputChannel        chan models.Packet
+
+	reductorWriterInFlightWg *sync.WaitGroup
 }
 
 // start the writer worker.
@@ -38,6 +41,7 @@ func (w *writer) start() {
 		case <-w.termincationChannel:
 			return
 		case pkt := <-w.inputChannel:
+			w.reductorWriterInFlightWg.Done()
 			fd.WriteString(pkt.TraceEvent.ToStr() + "\n")
 		}
 	}
