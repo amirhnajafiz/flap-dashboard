@@ -55,12 +55,13 @@ func (l loader) begin() error {
 		// each reader will read a partition of a file
 		go func(id int) {
 			r := reader{
-				id:               id,
-				offset:           int64(id) * int64(chunkSize),
-				chunkSize:        int64(chunkSize),
-				fileSize:         size,
-				filePath:         path,
-				reductorChannels: l.reductorChannels,
+				id:                id,
+				offset:            int64(id) * int64(chunkSize),
+				chunkSize:         int64(chunkSize),
+				fileSize:          size,
+				filePath:          path,
+				reductorChannels:  l.reductorChannels,
+				numberOfReductors: len(l.reductorChannels),
 			}
 			r.start()
 		}(index)

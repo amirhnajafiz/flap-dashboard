@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/amirhnajafiz/flak-dashboard/pkg/hashing"
 	"github.com/amirhnajafiz/flak-dashboard/pkg/models"
 
 	"github.com/sirupsen/logrus"
@@ -34,7 +35,8 @@ type reader struct {
 	filePath string
 
 	// reductor channels
-	reductorChannels map[int]chan models.Packet
+	reductorChannels  map[int]chan models.Packet
+	numberOfReductors int
 }
 
 // start the reader worker.
@@ -155,7 +157,7 @@ func (r reader) logHandler(line string) {
 	}
 
 	// find the reductor
-	index := len(pkt.TraceKey) % len(r.reductorChannels)
+	index := hashing.HashToRange(pkt.TraceKey, uint64(r.numberOfReductors))
 	r.reductorChannels[index] <- pkt
 }
 
