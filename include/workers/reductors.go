@@ -24,25 +24,20 @@ func (r *reductor) start() {
 		case <-r.terminationChannel:
 			return
 		case pkt := <-r.inputChannel:
-			// check the EOE flag
-			if pkt.EOE {
-				r.writerChannels[pkt.PartitionIndex] <- pkt
-			} else {
-				// check if there is a match
-				if val, ok := r.memory[pkt.TraceKey]; ok {
-					var mPkt *models.Packet
-					if val.TraceEvent.EventType == "EN" {
-						mPkt = r.merge(val, &pkt)
-					} else {
-						mPkt = r.merge(&pkt, val)
-					}
-
-					r.writerChannels[mPkt.PartitionIndex] <- *mPkt
-					delete(r.memory, pkt.TraceKey)
+			// check if there is a match
+			if val, ok := r.memory[pkt.TraceKey]; ok {
+				var mPkt *models.Packet
+				if val.TraceEvent.EventType == "EN" {
+					mPkt = r.merge(val, &pkt)
 				} else {
-					// save the packet into memory if no match
-					r.memory[pkt.TraceKey] = &pkt
+					mPkt = r.merge(&pkt, val)
 				}
+
+				r.writerChannels[mPkt.PartitionIndex] <- *mPkt
+				delete(r.memory, pkt.TraceKey)
+			} else {
+				// save the packet into memory if no match
+				r.memory[pkt.TraceKey] = &pkt
 			}
 		}
 	}

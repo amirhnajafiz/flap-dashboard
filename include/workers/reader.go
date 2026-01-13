@@ -107,9 +107,6 @@ func (r *reader) start() {
 			break
 		}
 	}
-
-	// send an EOE packet
-	r.postHook()
 }
 
 // In log handler, match with the regex and skip if not matched.
@@ -148,7 +145,6 @@ func (r *reader) logHandler(line string) {
 
 	// create a packet
 	pkt := models.Packet{
-		EOE:            false,
 		PartitionIndex: r.id,
 		PartitionName:  r.filePath,
 		TraceKey:       fmt.Sprintf("%d-%d-%s-%s", event.PID, event.TID, event.Proc, event.Event),
@@ -159,15 +155,4 @@ func (r *reader) logHandler(line string) {
 	// find the reductor
 	index := hashing.HashToRange(pkt.TraceKey, uint64(r.numberOfReductors))
 	r.reductorChannels[index] <- pkt
-}
-
-// post hook function sends an end of events packet to the first reductor.
-// the reductor then passes the event to a writer based on partition index.
-func (r *reader) postHook() {
-	pkt := models.Packet{
-		EOE:            true,
-		PartitionIndex: r.id,
-	}
-
-	r.reductorChannels[0] <- pkt
 }

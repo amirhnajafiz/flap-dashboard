@@ -12,8 +12,10 @@ import (
 // each writer writes into a single file. the number of writers
 // is equal to the number of readers, and they match by partition id.
 type writer struct {
-	path         string
-	inputChannel chan models.Packet
+	path string
+
+	termincationChannel chan int
+	inputChannel        chan models.Packet
 }
 
 // start the writer worker.
@@ -31,11 +33,12 @@ func (w *writer) start() {
 	defer fd.Close()
 
 	// get and write trace events into a file
-	for pkt := range w.inputChannel {
-		if pkt.EOE {
-			break
+	for {
+		select {
+		case <-w.termincationChannel:
+			return
+		case pkt := <-w.inputChannel:
+			fd.WriteString(pkt.TraceEvent.ToStr() + "\n")
 		}
-
-		fd.WriteString(pkt.TraceEvent.ToStr() + "\n")
 	}
 }
