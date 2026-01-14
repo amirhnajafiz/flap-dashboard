@@ -32,4 +32,7 @@ func main() {
 			}).Panic("worker manager failed")
 		}
 	}
+
+	// start the interpreters
+	bootstrap.StartInterpreter(cfg.DataPath)
 }
