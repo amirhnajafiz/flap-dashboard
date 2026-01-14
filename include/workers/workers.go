@@ -216,12 +216,15 @@ func (w *WorkerManager) Run(file *models.File) error {
 
 	// print validation information
 	logrus.WithFields(logrus.Fields{
-		"file":                file.Name,
-		"readers read logs":   readersReadLogs,
-		"readers sent logs":   readersSentLogs,
-		"reductors read logs": reductorsReadLogs,
-		"reductors sent logs": reductorsSentLogs,
-		"writers wrote logs":  writerSentLogs,
+		"file":                  file.Name,
+		"readers_read_logs":     readersReadLogs,
+		"readers_sent_logs":     readersSentLogs,
+		"reductors_read_logs":   reductorsReadLogs,
+		"reductors_sent_logs":   reductorsSentLogs,
+		"writers_wrote_logs":    writerSentLogs,
+		"readers_filter_rate":   float32(readersReadLogs-readersSentLogs) / float32(readersReadLogs),
+		"reductors_filter_rate": float32(reductorsReadLogs-reductorsSentLogs) / float32(reductorsReadLogs),
+		"writers_missing_rate":  float32(reductorsSentLogs-writerSentLogs) / float32(reductorsSentLogs),
 	}).Info("logs stored")
 
 	return nil

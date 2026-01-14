@@ -111,8 +111,8 @@ func (r *reader) logHandler(line string) {
 
 	// parse the key-value block
 	kv := make(map[string]string)
-	parts := strings.Split(match[7], " ")
-	for _, part := range parts {
+	parts := strings.SplitSeq(match[7], " ")
+	for part := range parts {
 		kvPair := strings.SplitN(part, "=", 2)
 		if len(kvPair) == 2 {
 			kv[kvPair[0]] = kvPair[1]

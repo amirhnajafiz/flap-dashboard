@@ -29,16 +29,10 @@ func (f *BacktickFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	b.WriteString(entry.Message)
 	b.WriteString(`"`)
 
-	// sort fields for stable output
-	keys := make([]string, 0, len(entry.Data))
-	for k := range entry.Data {
-		keys = append(keys, k)
-	}
-
 	// fields in backticks
-	for _, k := range keys {
+	for k := range entry.Data {
 		b.WriteByte(' ')
-		fmt.Fprintf(&b, "`%s=%v`", k, entry.Data[k])
+		fmt.Fprintf(&b, "\"%s=%v\"", k, entry.Data[k])
 	}
 
 	b.WriteByte('\n')
