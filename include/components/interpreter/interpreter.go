@@ -13,7 +13,10 @@ import (
 // Interpreter accepts a tracing index directory and starts reading
 // the files sequentially to export them as human readable logs.
 type Interpreter struct {
-	dataDir string
+	dataDir        string
+	outputFilePath string
+
+	fd *os.File
 
 	handlers map[string]handlerFunc
 
@@ -22,10 +25,11 @@ type Interpreter struct {
 }
 
 // NewInterpreter returns an interpreter instance.
-func NewInterpreter(dataDir string) *Interpreter {
+func NewInterpreter(dataDir string, outputFilePath string) *Interpreter {
 	// create a new interpreter instance
 	i := &Interpreter{
-		dataDir: dataDir,
+		dataDir:        dataDir,
+		outputFilePath: outputFilePath,
 		fdt: &fdTable{
 			kv: make(map[string]map[int]string),
 		},
@@ -73,6 +77,12 @@ func (i *Interpreter) Start() error {
 
 	// sort the names
 	sort.Strings(names)
+
+	// open the output file
+	i.fd, err = os.Create(i.outputFilePath)
+	if err != nil {
+		return fmt.Errorf("failed to open output file `%s`: %v", i.outputFilePath, err)
+	}
 
 	// process each file
 	for _, name := range names {

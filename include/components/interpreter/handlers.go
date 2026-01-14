@@ -20,7 +20,7 @@ func (i *Interpreter) handleIOSyscall(ts, proc, operand string, kv map[string]st
 		fname = fmt.Sprintf("unknown (fd=%d)", fd)
 	}
 
-	fmt.Printf("%s+%s [%s : %s] %s bytes file: %s\n", ts, kv["diff"], proc, operand, fname, kv["count"])
+	fmt.Fprintf(i.fd, "%s+%s [%s : %s] %s bytes from file: %s\n", ts, kv["diff"], proc, operand, kv["count"], fname)
 }
 
 func (i *Interpreter) handleFdTableSyscall(ts, proc, operand string, kv map[string]string) {
@@ -63,7 +63,7 @@ func (i *Interpreter) handleMemorySyscall(ts, proc, operand string, kv map[strin
 		fname = fmt.Sprintf("unknown (fd=%d)", fd)
 	}
 
-	fmt.Printf("%s+%s [%s : %s] memory_access: %s\n", ts, kv["diff"], proc, operand, fname)
+	fmt.Fprintf(i.fd, "%s+%s [%s : memory_access] from file: %s\n", ts, kv["diff"], proc, fname)
 }
 
 func (i *Interpreter) handleAddressSpaceSyscall(ts, proc, operand string, kv map[string]string) {
