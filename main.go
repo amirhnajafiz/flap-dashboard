@@ -5,6 +5,8 @@ import (
 	"github.com/amirhnajafiz/flak-dashboard/include/configs"
 	"github.com/amirhnajafiz/flak-dashboard/include/logging"
 	"github.com/amirhnajafiz/flak-dashboard/include/workers"
+
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -21,8 +23,13 @@ func main() {
 	}
 
 	// start the workers for each file sequentially
-	// number of writers is the same as the number of readers
+	wm := workers.NewWorkerManager(cfg.NumberOfReaders, cfg.NumberOfReductors)
 	for _, file := range files {
-		workers.Run(cfg.NumberOfReaders, cfg.NumberOfReductors, file)
+		if err := wm.Run(file); err != nil {
+			logrus.WithFields(logrus.Fields{
+				"file":  file.Name,
+				"error": err,
+			}).Panic("worker manager failed")
+		}
 	}
 }

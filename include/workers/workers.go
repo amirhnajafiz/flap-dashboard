@@ -10,27 +10,38 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// Run the workers (writers first, reductors, and finally readers).
-func Run(
+// WorkerManager starts three types of worker per each file to
+// read, reduce, and write the logs.
+type WorkerManager struct {
+	numberOfReaders   int
+	numberOfReductors int
+}
+
+// NewWorkerManager returns an instance of worker manager component.
+func NewWorkerManager(
 	numberOfReaders int,
 	numberOfReductors int,
-	file *models.File,
-) {
+) *WorkerManager {
+	return &WorkerManager{
+		numberOfReaders:   numberOfReaders,
+		numberOfReductors: numberOfReductors,
+	}
+}
+
+// Run the workers (writers first, reductors, and finally readers).
+func (w *WorkerManager) Run(file *models.File) error {
 	// sort the file first
 	if err := sorting.SortFile(file.Path); err != nil {
-		logrus.WithFields(logrus.Fields{
-			"path":  file.Path,
-			"error": err,
-		}).Panic("failed to sort")
+		return fmt.Errorf("failed to sort: %v", err)
 	}
 
 	// communication channels: writers
-	writerChannels := make(map[int]chan *models.Packet, numberOfReaders)
-	writerTerminationChannels := make(map[int]chan int, numberOfReaders)
+	writerChannels := make(map[int]chan *models.Packet, w.numberOfReaders)
+	writerTerminationChannels := make(map[int]chan int, w.numberOfReaders)
 
 	// communication channels: reductors
-	reductorChannels := make(map[int]chan *models.Packet, numberOfReductors)
-	reductorTerminationChannels := make(map[int]chan int, numberOfReductors)
+	reductorChannels := make(map[int]chan *models.Packet, w.numberOfReductors)
+	reductorTerminationChannels := make(map[int]chan int, w.numberOfReductors)
 
 	// waitgroups
 	var (
@@ -52,7 +63,7 @@ func Run(
 	)
 
 	// start the writers
-	for i := range numberOfReaders {
+	for i := range w.numberOfReaders {
 		writersWg.Add(1)
 
 		writerChannels[i] = make(chan *models.Packet)
@@ -88,12 +99,12 @@ func Run(
 	}
 
 	logrus.WithFields(logrus.Fields{
-		"count": numberOfReaders,
+		"count": w.numberOfReaders,
 		"file":  file.Name,
 	}).Info("writers start")
 
 	// start the reductors
-	for i := range numberOfReductors {
+	for i := range w.numberOfReductors {
 		reductorsWg.Add(1)
 
 		reductorChannels[i] = make(chan *models.Packet)
@@ -124,12 +135,12 @@ func Run(
 	}
 
 	logrus.WithFields(logrus.Fields{
-		"count": numberOfReductors,
+		"count": w.numberOfReductors,
 		"file":  file.Name,
 	}).Info("reductors start")
 
 	// start the readers
-	for i := range numberOfReaders {
+	for i := range w.numberOfReaders {
 		readersWg.Add(1)
 
 		go func(id int) {
@@ -144,7 +155,7 @@ func Run(
 				readLogs:                 0,
 				sentLogs:                 0,
 				reductorChannels:         reductorChannels,
-				numberOfReductors:        numberOfReductors,
+				numberOfReductors:        w.numberOfReductors,
 				readerReductorInFlightWg: &readerReductorInFlightWg,
 			}
 			if err := r.start(); err != nil {
@@ -164,7 +175,7 @@ func Run(
 	}
 
 	logrus.WithFields(logrus.Fields{
-		"count": numberOfReaders,
+		"count": w.numberOfReaders,
 		"file":  file.Name,
 	}).Info("readers start")
 
@@ -181,6 +192,7 @@ func Run(
 	// send terminate signal to all reductors
 	for _, channel := range reductorTerminationChannels {
 		channel <- 1
+		close(channel)
 	}
 	reductorsWg.Wait()
 
@@ -194,6 +206,7 @@ func Run(
 	// send terminate signal to all writers
 	for _, channel := range writerTerminationChannels {
 		channel <- 1
+		close(channel)
 	}
 	writersWg.Wait()
 
@@ -210,4 +223,6 @@ func Run(
 		"reductors sent logs": reductorsSentLogs,
 		"writers wrote logs":  writerSentLogs,
 	}).Info("logs stored")
+
+	return nil
 }
