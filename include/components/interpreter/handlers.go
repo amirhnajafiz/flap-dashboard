@@ -3,6 +3,7 @@ package interpreter
 import (
 	"fmt"
 	"strconv"
+	"time"
 )
 
 // system-call handler function type
@@ -24,12 +25,19 @@ func (i *Interpreter) handleIOSyscall(ts, proc, operand string, kv map[string]st
 		fname = fmt.Sprintf("unknown (fd=%d)", fd)
 	}
 
+	// convert ts to datetime
+	tsInt64, _ := strconv.ParseInt(ts, 10, 64)
+	timeDuration, _ := strconv.ParseInt(kv["diff"], 10, 64)
+
+	startDate := i.timeManager.ToTime(tsInt64)
+	endDate := i.timeManager.ToTime(tsInt64 + timeDuration)
+
 	// write into the output file
 	fmt.Fprintf(
 		i.fd,
-		"%s+%s [%s : %s] %s bytes from file: %s\n",
-		ts,
-		kv["diff"],
+		"%s - %d [%s : %s] %s bytes from file: %s\n",
+		startDate.Format(time.RFC3339Nano),
+		endDate.Sub(startDate).Nanoseconds(),
 		proc,
 		operand,
 		kv["count"],
@@ -86,12 +94,19 @@ func (i *Interpreter) handleMemorySyscall(ts, proc, operand string, kv map[strin
 		fname = fmt.Sprintf("unknown (fd=%d)", fd)
 	}
 
+	// convert ts to datetime
+	tsInt64, _ := strconv.ParseInt(ts, 10, 64)
+	timeDuration, _ := strconv.ParseInt(kv["diff"], 10, 64)
+
+	startDate := i.timeManager.ToTime(tsInt64)
+	endDate := i.timeManager.ToTime(tsInt64 + timeDuration)
+
 	// write into the output file
 	fmt.Fprintf(
 		i.fd,
-		"%s+%s [%s : memory_access] from file: %s\n",
-		ts,
-		kv["diff"],
+		"%s - %d [%s : memory_access] from file: %s\n",
+		startDate.Format(time.RFC3339Nano),
+		endDate.Sub(startDate).Nanoseconds(),
 		proc,
 		fname,
 	)

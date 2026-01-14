@@ -34,5 +34,7 @@ func main() {
 	}
 
 	// start the interpreters
-	bootstrap.StartInterpreter(cfg.DataPath)
+	if err := bootstrap.StartInterpreter(cfg.DataPath); err != nil {
+		logrus.WithField("error", err).Panic("interpretor failed")
+	}
 }
