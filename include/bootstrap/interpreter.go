@@ -16,8 +16,8 @@ func StartInterpreter(dataDirPath string) {
 	wg.Add(2)
 
 	// start the two interpreters instances
-	go runInterpreterInstance(fmt.Sprintf("%s/trace_io_index", dataDirPath), &wg)
-	go runInterpreterInstance(fmt.Sprintf("%s/trace_memory_index", dataDirPath), &wg)
+	go runInterpreterInstance(fmt.Sprintf("%s/trace_io_chunks", dataDirPath), &wg)
+	go runInterpreterInstance(fmt.Sprintf("%s/trace_memory_chunks", dataDirPath), &wg)
 
 	// wait for them to finish
 	wg.Wait()
@@ -32,7 +32,7 @@ func runInterpreterInstance(path string, wg *sync.WaitGroup) {
 	}).Info("interpreter start")
 
 	// create a new interpreter and start
-	output := path + "/out.hrd"
+	output := path + "/replay.hrd"
 	i := interpreter.NewInterpreter(path, output)
 
 	// check for any internal errors

@@ -18,7 +18,7 @@ type Interpreter struct {
 
 	fd *os.File
 
-	handlers map[string]handlerFunc
+	handlers map[string]syscallHandlerFunc
 
 	fdt *fdTable
 	vma *virtualMemoryAddressSpace
@@ -39,7 +39,7 @@ func NewInterpreter(dataDir string, outputFilePath string) *Interpreter {
 	}
 
 	// set the handlers
-	i.handlers = map[string]handlerFunc{
+	i.handlers = map[string]syscallHandlerFunc{
 		"open":            i.handleFdTableSyscall,
 		"openat":          i.handleFdTableSyscall,
 		"statfs":          i.handleFdTableSyscall,

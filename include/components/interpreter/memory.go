@@ -76,5 +76,5 @@ func (v *virtualMemoryAddressSpace) search(proc string, address int64) int {
 		}
 	}
 
-	return -1
+	return -2 // -1 could be a hidden mmap
 }

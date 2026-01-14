@@ -27,7 +27,7 @@ func BeginDataLoader(dataDirPath string, numberOfReaders int) ([]*models.File, e
 		outPath := fmt.Sprintf(
 			"%s/%s",
 			dataDirPath,
-			strings.Replace(pattern, "*.log", "index", 1),
+			strings.Replace(pattern, "*.log", "chunks", 1),
 		)
 
 		if err := os.MkdirAll(
