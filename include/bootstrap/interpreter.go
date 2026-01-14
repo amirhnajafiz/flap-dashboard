@@ -15,30 +15,34 @@ func StartInterpreter(dataDirPath string) {
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	// start two interpreters instances
-	go func(subdir string) {
-		defer wg.Done()
-		runInstance(dataDirPath, subdir)
-	}("trace_io_index")
-	go func(subdir string) {
-		defer wg.Done()
-		runInstance(dataDirPath, subdir)
-	}("trace_memory_index")
+	// start the two interpreters instances
+	go runInterpreterInstance(fmt.Sprintf("%s/trace_io_index", dataDirPath), &wg)
+	go runInterpreterInstance(fmt.Sprintf("%s/trace_memory_index", dataDirPath), &wg)
 
 	// wait for them to finish
 	wg.Wait()
 }
 
 // run an interpreter instance.
-func runInstance(dataDirPath string, subdir string) {
-	path := fmt.Sprintf("%s/%s", dataDirPath, subdir)
+func runInterpreterInstance(path string, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	logrus.WithFields(logrus.Fields{
+		"path": path,
+	}).Info("interpreter start")
 
 	// create a new interpreter and start
 	i := interpreter.NewInterpreter(path)
+
+	// check for any internal errors
 	if err := i.Start(); err != nil {
 		logrus.WithFields(logrus.Fields{
-			"name":  subdir,
+			"path":  path,
 			"error": err,
 		}).Panic("interpreter failed")
 	}
+
+	logrus.WithFields(logrus.Fields{
+		"path": path,
+	}).Info("interpreter finished")
 }
