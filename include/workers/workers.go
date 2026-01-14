@@ -62,7 +62,7 @@ func Run(
 			defer close(writerChannels[id])
 			defer writersWg.Done()
 
-			path := fmt.Sprintf("%s/%d.out", file.OutputDir, id)
+			path := fmt.Sprintf("%s/%d.%d.out", file.OutputDir, file.Id, id)
 
 			w := writer{
 				sentLogs:                 0,

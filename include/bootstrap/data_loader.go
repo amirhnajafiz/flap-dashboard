@@ -2,23 +2,26 @@ package bootstrap
 
 import (
 	"fmt"
-	"io/fs"
 	"os"
-	"path/filepath"
 	"strings"
 
+	fm "github.com/amirhnajafiz/flak-dashboard/pkg/file_manager"
 	"github.com/amirhnajafiz/flak-dashboard/pkg/models"
 )
 
-// BeginDataLoader gets the data directory path and creates a list
+// BeginDataLoader gets the data directory path and returns a list
 // of log files that need to be processed by the workers.
 func BeginDataLoader(dataDirPath string, numberOfReaders int) ([]*models.File, error) {
+	// array of files to be returned
 	files := make([]*models.File, 0)
+
+	// patterns
 	patterns := []string{
 		"trace_io_*.log",
 		"trace_memory_*.log",
 	}
 
+	// for each pattern get the file names and build a file instance
 	for _, pattern := range patterns {
 		// create the output dir
 		outPath := fmt.Sprintf(
@@ -34,21 +37,22 @@ func BeginDataLoader(dataDirPath string, numberOfReaders int) ([]*models.File, e
 		}
 
 		// get the file names
-		fileNames, err := getFilesByWildcardMatch(dataDirPath, pattern)
+		fileNames, err := fm.GetFileNamesByWildcardMatch(dataDirPath, pattern)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read `%s` files: %v", pattern, err)
 		}
 
-		for _, name := range fileNames {
+		for index, name := range fileNames {
 			// create a new file model
 			file := models.File{
+				Id:        index,
 				Name:      name,
 				Path:      fmt.Sprintf("%s/%s", dataDirPath, name),
 				OutputDir: outPath,
 			}
 
 			// get file size
-			size, err := getFileSize(file.Path)
+			size, err := fm.GetFileSize(file.Path)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get file `%s` stats: %v", file.Path, err)
 			}
@@ -62,44 +66,4 @@ func BeginDataLoader(dataDirPath string, numberOfReaders int) ([]*models.File, e
 	}
 
 	return files, nil
-}
-
-func getFilesByWildcardMatch(root string, pattern string) ([]string, error) {
-	names := make([]string, 0)
-
-	// walk the dir and look for matching patterns
-	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if d.IsDir() {
-			return nil
-		}
-
-		if match, err := filepath.Match(pattern, d.Name()); err == nil && match {
-			names = append(names, d.Name())
-		}
-
-		return nil
-	})
-
-	return names, err
-}
-
-func getFileSize(path string) (int64, error) {
-	// open the log file
-	file, err := os.Open(path)
-	if err != nil {
-		return 0, fmt.Errorf("failed to open the tracing file: %v", err)
-	}
-	defer file.Close()
-
-	// get the file stat
-	info, err := file.Stat()
-	if err != nil {
-		return 0, fmt.Errorf("failed to get file stat: %v", err)
-	}
-
-	return info.Size(), nil
 }
