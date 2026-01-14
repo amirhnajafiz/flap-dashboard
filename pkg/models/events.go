@@ -20,11 +20,11 @@ type TraceEvent struct {
 func (t TraceEvent) ToStr() string {
 	var kvStr strings.Builder
 	for k, v := range t.KV {
-		fmt.Fprintf(&kvStr, "`%s=%s` ", k, v)
+		fmt.Fprintf(&kvStr, "%s=%s****", k, v)
 	}
 
 	return fmt.Sprintf(
-		"%d %s %s %s",
+		"%d####%s####%s#### %s",
 		t.Timestamp,
 		t.Proc,
 		t.Event,

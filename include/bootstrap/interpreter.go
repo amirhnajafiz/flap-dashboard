@@ -13,11 +13,11 @@ import (
 // the files inside trace_io_index and trace_memory_index.
 func StartInterpreter(dataDirPath string) {
 	var wg sync.WaitGroup
-	wg.Add(2)
+	wg.Add(1)
 
 	// start the two interpreters instances
 	go runInterpreterInstance(fmt.Sprintf("%s/trace_io_index", dataDirPath), &wg)
-	go runInterpreterInstance(fmt.Sprintf("%s/trace_memory_index", dataDirPath), &wg)
+	//go runInterpreterInstance(fmt.Sprintf("%s/trace_memory_index", dataDirPath), &wg)
 
 	// wait for them to finish
 	wg.Wait()

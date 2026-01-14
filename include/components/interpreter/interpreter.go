@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 
 	fm "github.com/amirhnajafiz/flak-dashboard/pkg/file_manager"
 )
@@ -14,13 +15,16 @@ import (
 type Interpreter struct {
 	dataDir string
 
+	handlers map[string]handlerFunc
+
 	fdt *fdTable
 	vma *virtualMemoryAddressSpace
 }
 
 // NewInterpreter returns an interpreter instance.
 func NewInterpreter(dataDir string) *Interpreter {
-	return &Interpreter{
+	// create a new interpreter instance
+	i := &Interpreter{
 		dataDir: dataDir,
 		fdt: &fdTable{
 			kv: make(map[string]map[int]string),
@@ -29,6 +33,34 @@ func NewInterpreter(dataDir string) *Interpreter {
 			blocks: make(map[string]map[int][]int64),
 		},
 	}
+
+	// set the handlers
+	i.handlers = map[string]handlerFunc{
+		"open":            i.handleFdTableSyscall,
+		"openat":          i.handleFdTableSyscall,
+		"statfs":          i.handleFdTableSyscall,
+		"statx":           i.handleFdTableSyscall,
+		"newlstat":        i.handleFdTableSyscall,
+		"newstat":         i.handleFdTableSyscall,
+		"creat":           i.handleFdTableSyscall,
+		"close":           i.handleFdTableSyscall,
+		"dup":             i.handleUpdateFdSyscall,
+		"dup2":            i.handleUpdateFdSyscall,
+		"dup3":            i.handleUpdateFdSyscall,
+		"read":            i.handleIOSyscall,
+		"write":           i.handleIOSyscall,
+		"readv":           i.handleIOSyscall,
+		"writev":          i.handleIOSyscall,
+		"pread64":         i.handleIOSyscall,
+		"pwrite64":        i.handleIOSyscall,
+		"preadv":          i.handleIOSyscall,
+		"pwritev":         i.handleIOSyscall,
+		"mmap":            i.handleAddressSpaceSyscall,
+		"munmap":          i.handleAddressSpaceSyscall,
+		"page_fault_user": i.handleMemorySyscall,
+	}
+
+	return i
 }
 
 // Start the interpreter
@@ -68,7 +100,33 @@ func (i *Interpreter) process(path string) error {
 		// get each line
 		line := scanner.Text()
 
-		fmt.Println(line)
+		// split the line by the line delimeter
+		parts := strings.Split(line, "####")
+		if len(parts) < 4 {
+			continue
+		}
+
+		// extract data
+		ts := parts[0]
+		proc := parts[1]
+		event := parts[2]
+		kvString := parts[3]
+
+		// build the key-value data
+		kv := make(map[string]string)
+		for part := range strings.SplitSeq(kvString, "****") {
+			if len(part) > 0 {
+				data := strings.Split(part, "=")
+				if len(data) == 2 {
+					kv[strings.Trim(data[0], " ")] = strings.Trim(data[1], " ")
+				}
+			}
+		}
+
+		// call the handler based on the event
+		if hd, ok := i.handlers[event]; ok {
+			hd(ts, proc, event, kv)
+		}
 	}
 
 	// check for scanner errors
