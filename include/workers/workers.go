@@ -222,9 +222,9 @@ func (w *WorkerManager) Run(file *models.File) error {
 		"reductors_read_logs":   reductorsReadLogs,
 		"reductors_sent_logs":   reductorsSentLogs,
 		"writers_wrote_logs":    writerSentLogs,
-		"readers_filter_rate":   float32(readersReadLogs-readersSentLogs) / float32(readersReadLogs),
-		"reductors_filter_rate": float32(reductorsReadLogs-reductorsSentLogs) / float32(reductorsReadLogs),
-		"writers_missing_rate":  float32(reductorsSentLogs-writerSentLogs) / float32(reductorsSentLogs),
+		"readers_filter_perc":   100 * float32(readersReadLogs-readersSentLogs) / float32(readersReadLogs),
+		"reductors_filter_perc": 100 * float32(reductorsReadLogs-reductorsSentLogs) / float32(reductorsReadLogs),
+		"writers_missing_perc":  100 * float32(reductorsSentLogs-writerSentLogs) / float32(reductorsSentLogs),
 	}).Info("logs stored")
 
 	return nil
