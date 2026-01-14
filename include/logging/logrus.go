@@ -1,6 +1,10 @@
 package logging
 
-import "github.com/sirupsen/logrus"
+import (
+	"time"
+
+	"github.com/sirupsen/logrus"
+)
 
 // SetLogger sets the logger using input vars, it defaults to text logs
 // on debug level unless otherwise specified.
@@ -17,12 +21,12 @@ func SetLogger(level string, jsonLog bool) {
 	}
 
 	if jsonLog {
-		logrus.SetFormatter(&logrus.JSONFormatter{})
+		logrus.SetFormatter(&logrus.JSONFormatter{
+			TimestampFormat: time.RFC3339,
+		})
 	} else {
-		logrus.SetFormatter(&logrus.TextFormatter{
-			DisableColors:  true,
-			DisableSorting: true,
-			DisableQuote:   false,
+		logrus.SetFormatter(&BacktickFormatter{
+			TimestampFormat: time.RFC3339,
 		})
 	}
 }
