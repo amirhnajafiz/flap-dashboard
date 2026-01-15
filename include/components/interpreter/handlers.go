@@ -88,6 +88,11 @@ func (i *Interpreter) handleMemorySyscall(ts, proc, operand string, kv map[strin
 	// extract data
 	address, _ := strconv.ParseInt(kv["addr"], 10, 64)
 	fd := i.vma.search(proc, address)
+
+	if fd == -2 {
+		return
+	}
+
 	fname := i.fdt.search(proc, fd)
 
 	if len(fname) == 0 {
@@ -121,7 +126,7 @@ func (i *Interpreter) handleAddressSpaceSyscall(ts, proc, operand string, kv map
 	}
 
 	// extract data
-	address, _ := strconv.ParseInt(kv["addr"], 10, 64)
+	address, _ := strconv.ParseInt(kv["ret"], 10, 64)
 	boundary, _ := strconv.ParseInt(kv["len"], 10, 64)
 
 	// handle mmap and munmap
