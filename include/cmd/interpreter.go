@@ -6,7 +6,6 @@ import (
 
 	"github.com/amirhnajafiz/flak-dashboard/include/components/interpreter"
 	"github.com/amirhnajafiz/flak-dashboard/include/configs"
-	"github.com/amirhnajafiz/flak-dashboard/pkg/time_manager"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -32,15 +31,9 @@ func (i InterpreterCMD) main(_ *cobra.Command, _ []string) {
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	// create a time manager
-	tmInstance, err := time_manager.NewTimeManager(i.Cfg.DataPath + "/reference_timestamps.json")
-	if err != nil {
-		panic(err)
-	}
-
 	// start the two interpreters instances
-	go i.runInterpreterInstance(fmt.Sprintf("%s/trace_io_chunks", i.Cfg.DataPath), &wg, tmInstance)
-	go i.runInterpreterInstance(fmt.Sprintf("%s/trace_memory_chunks", i.Cfg.DataPath), &wg, tmInstance)
+	go i.runInterpreterInstance(fmt.Sprintf("%s/trace_io_chunks", i.Cfg.DataPath), &wg)
+	go i.runInterpreterInstance(fmt.Sprintf("%s/trace_memory_chunks", i.Cfg.DataPath), &wg)
 
 	// wait for them to finish
 	wg.Wait()
@@ -50,7 +43,6 @@ func (i InterpreterCMD) main(_ *cobra.Command, _ []string) {
 func (i *InterpreterCMD) runInterpreterInstance(
 	path string,
 	wg *sync.WaitGroup,
-	tmInstance *time_manager.TimeManager,
 ) {
 	defer wg.Done()
 
@@ -60,7 +52,7 @@ func (i *InterpreterCMD) runInterpreterInstance(
 
 	// create a new interpreter and start
 	output := path + "/replay.hrd"
-	ii := interpreter.NewInterpreter(path, output, tmInstance)
+	ii := interpreter.NewInterpreter(path, output, i.Cfg.DataPath+"/reference_timestamps.json")
 
 	// check for any internal errors
 	if err := ii.Start(); err != nil {

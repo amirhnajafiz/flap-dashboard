@@ -1,4 +1,4 @@
-package time_manager
+package interpreter
 
 import (
 	"encoding/json"

@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/amirhnajafiz/flak-dashboard/pkg/files"
-	tm "github.com/amirhnajafiz/flak-dashboard/pkg/time_manager"
 )
 
 // Interpreter accepts a tracing index directory and starts reading
@@ -21,14 +20,16 @@ type Interpreter struct {
 
 	handlers map[string]syscallHandlerFunc
 
-	timeManager *tm.TimeManager
+	timeManager *TimeManager
 
 	fdt *fdTable
 	vma *virtualMemoryAddressSpace
 }
 
 // NewInterpreter returns an interpreter instance.
-func NewInterpreter(dataDir string, outputFilePath string, timeManager *tm.TimeManager) *Interpreter {
+func NewInterpreter(dataDir, outputFilePath, referencePath string) *Interpreter {
+	tm, _ := NewTimeManager(referencePath)
+
 	// create a new interpreter instance
 	i := &Interpreter{
 		dataDir:        dataDir,
@@ -39,7 +40,7 @@ func NewInterpreter(dataDir string, outputFilePath string, timeManager *tm.TimeM
 		vma: &virtualMemoryAddressSpace{
 			blocks: make(map[string]map[int][]int64),
 		},
-		timeManager: timeManager,
+		timeManager: tm,
 	}
 
 	// set the handlers
