@@ -20,7 +20,7 @@ type InterpreterCMD struct {
 func (i InterpreterCMD) Command() *cobra.Command {
 	return &cobra.Command{
 		Use:   "interpreter",
-		Short: "interpreting-data-chunks",
+		Short: "Interpreting data chunks",
 		Long:  "Interpreter reads the data chunks created by loader and builds a human readable log file",
 		Run:   i.main,
 	}

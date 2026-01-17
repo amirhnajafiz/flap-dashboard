@@ -23,7 +23,7 @@ type LoaderCMD struct {
 func (l LoaderCMD) Command() *cobra.Command {
 	return &cobra.Command{
 		Use:   "loader",
-		Short: "load-data",
+		Short: "Loading data logs",
 		Long:  "Loader reads the logs from a data directory and creates the chunked data for interpreter",
 		Run:   l.main,
 	}
