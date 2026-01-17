@@ -52,10 +52,14 @@ func (i *InterpreterCMD) runInterpreterInstance(
 
 	// create a new interpreter and start
 	output := path + "/replay.hrd"
-	ii := interpreter.NewInterpreter(path, output, i.Cfg.DataPath+"/reference_timestamps.json")
+	ii := interpreter.Interpreter{
+		DataDirPath:     path,
+		OutputFilePath:  output,
+		ReferenceTSPath: i.Cfg.DataPath + "/reference_timestamps.json",
+	}
 
 	// check for any internal errors
-	if err := ii.Start(); err != nil {
+	if err := ii.Begin(); err != nil {
 		logrus.WithFields(logrus.Fields{
 			"path":  path,
 			"error": err,

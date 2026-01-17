@@ -29,8 +29,8 @@ func (i *Interpreter) handleIOSyscall(ts, proc, operand string, kv map[string]st
 	tsInt64, _ := strconv.ParseInt(ts, 10, 64)
 	timeDuration, _ := strconv.ParseInt(kv["diff"], 10, 64)
 
-	startDate := i.timeManager.ToTime(tsInt64)
-	endDate := i.timeManager.ToTime(tsInt64 + timeDuration)
+	startDate := i.toDatetime(tsInt64)
+	endDate := i.toDatetime(tsInt64 + timeDuration)
 
 	// write into the output file
 	fmt.Fprintf(
@@ -103,8 +103,8 @@ func (i *Interpreter) handleMemorySyscall(ts, proc, operand string, kv map[strin
 	tsInt64, _ := strconv.ParseInt(ts, 10, 64)
 	timeDuration, _ := strconv.ParseInt(kv["diff"], 10, 64)
 
-	startDate := i.timeManager.ToTime(tsInt64)
-	endDate := i.timeManager.ToTime(tsInt64 + timeDuration)
+	startDate := i.toDatetime(tsInt64)
+	endDate := i.toDatetime(tsInt64 + timeDuration)
 
 	// write into the output file
 	fmt.Fprintf(

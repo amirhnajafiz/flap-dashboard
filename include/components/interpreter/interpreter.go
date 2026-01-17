@@ -2,10 +2,12 @@ package interpreter
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"os"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/amirhnajafiz/flak-dashboard/pkg/files"
 )
@@ -13,34 +15,47 @@ import (
 // Interpreter accepts a tracing index directory and starts reading
 // the files sequentially to export them as human readable logs.
 type Interpreter struct {
-	dataDir        string
-	outputFilePath string
+	DataDirPath     string
+	OutputFilePath  string
+	ReferenceTSPath string
 
-	fd *os.File
+	referenceWall int64
+	referenceMono int64
 
 	handlers map[string]syscallHandlerFunc
 
-	timeManager *TimeManager
-
+	fd  *os.File
 	fdt *fdTable
 	vma *virtualMemoryAddressSpace
 }
 
-// NewInterpreter returns an interpreter instance.
-func NewInterpreter(dataDir, outputFilePath, referencePath string) *Interpreter {
-	tm, _ := NewTimeManager(referencePath)
+func (i *Interpreter) initVars() {
+	i.referenceMono = 0
+	i.referenceWall = 0
 
-	// create a new interpreter instance
-	i := &Interpreter{
-		dataDir:        dataDir,
-		outputFilePath: outputFilePath,
-		fdt: &fdTable{
-			kv: make(map[string]map[int]string),
-		},
-		vma: &virtualMemoryAddressSpace{
-			blocks: make(map[string]map[int][]int64),
-		},
-		timeManager: tm,
+	// read the reference timestamps from the given path
+	data, err := os.ReadFile(i.ReferenceTSPath)
+	if err == nil {
+		type referenceTSData struct {
+			RefWall float64 `json:"ref_wall"`
+			RefMono float64 `json:"ref_mono"`
+		}
+
+		var rt referenceTSData
+		if err := json.Unmarshal(data, &rt); err == nil {
+			i.referenceWall = int64(rt.RefWall * 1e9)
+			i.referenceMono = int64(rt.RefMono * 1e9)
+		}
+	}
+
+	// create file descriptors table
+	i.fdt = &fdTable{
+		kv: make(map[string]map[int]string),
+	}
+
+	// create virtual memory address
+	i.vma = &virtualMemoryAddressSpace{
+		blocks: make(map[string]map[int][]int64),
 	}
 
 	// set the handlers
@@ -68,14 +83,28 @@ func NewInterpreter(dataDir, outputFilePath, referencePath string) *Interpreter 
 		"munmap":          i.handleAddressSpaceSyscall,
 		"page_fault_user": i.handleMemorySyscall,
 	}
-
-	return i
 }
 
-// Start the interpreter
-func (i *Interpreter) Start() error {
+func (i *Interpreter) toDatetime(sec int64) time.Time {
+	// delta from reference
+	deltaNs := sec - i.referenceMono
+
+	// event wall time in nanoseconds
+	eventWallNs := i.referenceWall + deltaNs
+
+	secs := eventWallNs / 1e9
+	nsecs := eventWallNs % 1e9
+
+	return time.Unix(secs, nsecs)
+}
+
+// Begin interpreting.
+func (i *Interpreter) Begin() error {
+	// call init vars
+	i.initVars()
+
 	// get the file names
-	names, err := files.GetFileNamesByWildcardMatch(i.dataDir, "*.out")
+	names, err := files.GetFileNamesByWildcardMatch(i.DataDirPath, "*.out")
 	if err != nil {
 		return fmt.Errorf("failed to get file names: %v", err)
 	}
@@ -84,14 +113,14 @@ func (i *Interpreter) Start() error {
 	sort.Strings(names)
 
 	// open the output file
-	i.fd, err = os.Create(i.outputFilePath)
+	i.fd, err = os.Create(i.OutputFilePath)
 	if err != nil {
-		return fmt.Errorf("failed to open output file `%s`: %v", i.outputFilePath, err)
+		return fmt.Errorf("failed to open output file `%s`: %v", i.OutputFilePath, err)
 	}
 
 	// process each file
 	for _, name := range names {
-		if err := i.process(fmt.Sprintf("%s/%s", i.dataDir, name)); err != nil {
+		if err := i.process(fmt.Sprintf("%s/%s", i.DataDirPath, name)); err != nil {
 			return fmt.Errorf("failed processing `%s`: %v", name, err)
 		}
 	}
