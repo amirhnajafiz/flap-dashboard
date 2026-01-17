@@ -2,9 +2,9 @@ package main
 
 import (
 	"github.com/amirhnajafiz/flak-dashboard/include/bootstrap"
+	"github.com/amirhnajafiz/flak-dashboard/include/components/loader"
 	"github.com/amirhnajafiz/flak-dashboard/include/configs"
 	"github.com/amirhnajafiz/flak-dashboard/include/logging"
-	"github.com/amirhnajafiz/flak-dashboard/include/workers"
 
 	"github.com/sirupsen/logrus"
 )
@@ -22,14 +22,20 @@ func main() {
 		panic(err)
 	}
 
-	// start the workers for each file sequentially
-	wm := workers.NewWorkerManager(cfg.NumberOfReaders, cfg.NumberOfReductors)
+	// create a loader coordinator
+	coor := loader.Coordinator{
+		Readers:   cfg.NumberOfReaders,
+		Reductors: cfg.NumberOfReductors,
+		Writers:   cfg.NumberOfReaders,
+	}
+
+	// start loading the data for each file sequentially
 	for _, file := range files {
-		if err := wm.Run(file); err != nil {
+		if err := coor.Begin(file); err != nil {
 			logrus.WithFields(logrus.Fields{
 				"file":  file.Name,
 				"error": err,
-			}).Panic("worker manager failed")
+			}).Panic("coordinator failed")
 		}
 	}
 

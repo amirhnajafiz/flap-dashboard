@@ -110,7 +110,7 @@ func (c *Coordinator) newReader(id int, file *models.File) {
 // start a new reductor instance.
 func (c *Coordinator) newReductor(id int) {
 	defer close(c.chanReductors[id])
-	defer c.wgReaders.Done()
+	defer c.wgReductors.Done()
 
 	rd := reductor{
 		readLogs:                 0,
