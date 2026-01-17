@@ -5,8 +5,8 @@ import (
 	"os"
 	"sync"
 
+	"github.com/amirhnajafiz/flak-dashboard/pkg/files"
 	"github.com/amirhnajafiz/flak-dashboard/pkg/models"
-	"github.com/amirhnajafiz/flak-dashboard/pkg/sorting"
 )
 
 // writer worker submits the events by writing them into files.
@@ -38,7 +38,7 @@ func (w *writer) start() error {
 	for {
 		select {
 		case <-w.termincationChannel:
-			return sorting.SortFile(w.path)
+			return files.SortFile(w.path)
 		case pkt := <-w.inputChannel:
 			w.reductorWriterInFlightWg.Done()
 			w.sentLogs++

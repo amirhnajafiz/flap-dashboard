@@ -18,8 +18,8 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/amirhnajafiz/flak-dashboard/pkg/files"
 	"github.com/amirhnajafiz/flak-dashboard/pkg/models"
-	"github.com/amirhnajafiz/flak-dashboard/pkg/sorting"
 
 	"github.com/sirupsen/logrus"
 )
@@ -221,7 +221,7 @@ func (c *Coordinator) logValidationMetrics(name string) {
 // Begin loading data from a given file.
 func (c *Coordinator) Begin(file *models.File) error {
 	// sort the input file (file exists check)
-	if err := sorting.SortFile(file.Path); err != nil {
+	if err := files.SortFile(file.Path); err != nil {
 		return fmt.Errorf("failed to sort: %v", err)
 	}
 
