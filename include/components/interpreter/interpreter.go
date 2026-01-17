@@ -12,23 +12,30 @@ import (
 	"github.com/amirhnajafiz/flak-dashboard/pkg/files"
 )
 
-// Interpreter accepts a tracing index directory and starts reading
-// the files sequentially to export them as human readable logs.
+// Interpreter reads the data chunks created by loader and
+// converts them to human-readable format.
 type Interpreter struct {
+	// input/output path
 	DataDirPath     string
 	OutputFilePath  string
 	ReferenceTSPath string
 
+	// time references
 	referenceWall int64
 	referenceMono int64
 
-	handlers map[string]syscallHandlerFunc
+	// input file
+	fd *os.File
 
-	fd  *os.File
+	// memory instances
 	fdt *fdTable
-	vma *virtualMemoryAddressSpace
+	vm  *virtualMemoryAddressSpace
+
+	// handlers map
+	handlers map[string]syscallHandlerFunc
 }
 
+// initialize the interpreter variables.
 func (i *Interpreter) initVars() {
 	i.referenceMono = 0
 	i.referenceWall = 0
@@ -54,7 +61,7 @@ func (i *Interpreter) initVars() {
 	}
 
 	// create virtual memory address
-	i.vma = &virtualMemoryAddressSpace{
+	i.vm = &virtualMemoryAddressSpace{
 		blocks: make(map[string]map[int][]int64),
 	}
 
@@ -85,47 +92,14 @@ func (i *Interpreter) initVars() {
 	}
 }
 
+// to datetime converts a nsecs to time instance.
 func (i *Interpreter) toDatetime(sec int64) time.Time {
-	// delta from reference
-	deltaNs := sec - i.referenceMono
-
-	// event wall time in nanoseconds
-	eventWallNs := i.referenceWall + deltaNs
+	eventWallNs := i.referenceWall + (sec - i.referenceMono)
 
 	secs := eventWallNs / 1e9
 	nsecs := eventWallNs % 1e9
 
 	return time.Unix(secs, nsecs)
-}
-
-// Begin interpreting.
-func (i *Interpreter) Begin() error {
-	// call init vars
-	i.initVars()
-
-	// get the file names
-	names, err := files.GetFileNamesByWildcardMatch(i.DataDirPath, "*.out")
-	if err != nil {
-		return fmt.Errorf("failed to get file names: %v", err)
-	}
-
-	// sort the names
-	sort.Strings(names)
-
-	// open the output file
-	i.fd, err = os.Create(i.OutputFilePath)
-	if err != nil {
-		return fmt.Errorf("failed to open output file `%s`: %v", i.OutputFilePath, err)
-	}
-
-	// process each file
-	for _, name := range names {
-		if err := i.process(fmt.Sprintf("%s/%s", i.DataDirPath, name)); err != nil {
-			return fmt.Errorf("failed processing `%s`: %v", name, err)
-		}
-	}
-
-	return nil
 }
 
 // process a given file.
@@ -176,6 +150,36 @@ func (i *Interpreter) process(path string) error {
 	// check for scanner errors
 	if err := scanner.Err(); err != nil {
 		return fmt.Errorf("scanner failed: %v", err)
+	}
+
+	return nil
+}
+
+// Begin interpreting.
+func (i *Interpreter) Begin() error {
+	// call init vars
+	i.initVars()
+
+	// get the file names (aka chunks created by loader)
+	names, err := files.GetFileNamesByWildcardMatch(i.DataDirPath, "*.out")
+	if err != nil {
+		return fmt.Errorf("failed to get file names: %v", err)
+	}
+
+	// sort the names to process them sequentially
+	sort.Strings(names)
+
+	// open the output file
+	i.fd, err = os.Create(i.OutputFilePath)
+	if err != nil {
+		return fmt.Errorf("failed to open output file `%s`: %v", i.OutputFilePath, err)
+	}
+
+	// process each file in order
+	for _, name := range names {
+		if err := i.process(fmt.Sprintf("%s/%s", i.DataDirPath, name)); err != nil {
+			return fmt.Errorf("failed processing `%s`: %v", name, err)
+		}
 	}
 
 	return nil
