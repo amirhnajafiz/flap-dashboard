@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	fm "github.com/amirhnajafiz/flak-dashboard/pkg/file_manager"
+	"github.com/amirhnajafiz/flak-dashboard/pkg/files"
 	tm "github.com/amirhnajafiz/flak-dashboard/pkg/time_manager"
 )
 
@@ -74,7 +74,7 @@ func NewInterpreter(dataDir string, outputFilePath string, timeManager *tm.TimeM
 // Start the interpreter
 func (i *Interpreter) Start() error {
 	// get the file names
-	names, err := fm.GetFileNamesByWildcardMatch(i.dataDir, "*.out")
+	names, err := files.GetFileNamesByWildcardMatch(i.dataDir, "*.out")
 	if err != nil {
 		return fmt.Errorf("failed to get file names: %v", err)
 	}

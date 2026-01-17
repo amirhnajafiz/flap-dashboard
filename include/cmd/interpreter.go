@@ -12,10 +12,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// InterpreterCMD starts the interpreter process.
 type InterpreterCMD struct {
 	Cfg configs.Config
 }
 
+// Command returns the cobra command instance.
 func (i InterpreterCMD) Command() *cobra.Command {
 	return &cobra.Command{
 		Use:   "interpreter",
@@ -25,6 +27,7 @@ func (i InterpreterCMD) Command() *cobra.Command {
 	}
 }
 
+// main function will be called for interpreter process.
 func (i InterpreterCMD) main(_ *cobra.Command, _ []string) {
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -44,7 +47,11 @@ func (i InterpreterCMD) main(_ *cobra.Command, _ []string) {
 }
 
 // run an interpreter instance.
-func (i *InterpreterCMD) runInterpreterInstance(path string, wg *sync.WaitGroup, tmInstance *time_manager.TimeManager) {
+func (i *InterpreterCMD) runInterpreterInstance(
+	path string,
+	wg *sync.WaitGroup,
+	tmInstance *time_manager.TimeManager,
+) {
 	defer wg.Done()
 
 	logrus.WithFields(logrus.Fields{

@@ -7,17 +7,19 @@ import (
 
 	"github.com/amirhnajafiz/flak-dashboard/include/components/loader"
 	"github.com/amirhnajafiz/flak-dashboard/include/configs"
-	fm "github.com/amirhnajafiz/flak-dashboard/pkg/file_manager"
+	"github.com/amirhnajafiz/flak-dashboard/pkg/files"
 	"github.com/amirhnajafiz/flak-dashboard/pkg/models"
-	"github.com/sirupsen/logrus"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
+// LoaderCMD starts the loader process.
 type LoaderCMD struct {
 	Cfg configs.Config
 }
 
+// Command returns the cobra command instance.
 func (l LoaderCMD) Command() *cobra.Command {
 	return &cobra.Command{
 		Use:   "loader",
@@ -27,11 +29,12 @@ func (l LoaderCMD) Command() *cobra.Command {
 	}
 }
 
+// main function will be called for loader process.
 func (l LoaderCMD) main(_ *cobra.Command, _ []string) {
-	// run the bootstrap functions
+	// get log files
 	files, err := l.getLogFile()
 	if err != nil {
-		panic(err)
+		logrus.WithField("error", err).Panic("loader failed")
 	}
 
 	// create a loader coordinator
@@ -55,7 +58,7 @@ func (l LoaderCMD) main(_ *cobra.Command, _ []string) {
 // get log files returns the files that loader needs to process.
 func (l LoaderCMD) getLogFile() ([]*models.File, error) {
 	// array of files to be returned
-	files := make([]*models.File, 0)
+	records := make([]*models.File, 0)
 
 	// patterns
 	patterns := []string{
@@ -79,7 +82,7 @@ func (l LoaderCMD) getLogFile() ([]*models.File, error) {
 		}
 
 		// get the file names
-		fileNames, err := fm.GetFileNamesByWildcardMatch(l.Cfg.DataPath, pattern)
+		fileNames, err := files.GetFileNamesByWildcardMatch(l.Cfg.DataPath, pattern)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read `%s` files: %v", pattern, err)
 		}
@@ -94,7 +97,7 @@ func (l LoaderCMD) getLogFile() ([]*models.File, error) {
 			}
 
 			// get file size
-			size, err := fm.GetFileSize(file.Path)
+			size, err := files.GetFileSize(file.Path)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get file `%s` stats: %v", file.Path, err)
 			}
@@ -103,9 +106,9 @@ func (l LoaderCMD) getLogFile() ([]*models.File, error) {
 			file.ChunkSize = int(size / int64(l.Cfg.NumberOfReaders))
 
 			// store the file
-			files = append(files, &file)
+			records = append(records, &file)
 		}
 	}
 
-	return files, nil
+	return records, nil
 }
