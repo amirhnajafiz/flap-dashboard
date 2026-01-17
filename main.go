@@ -4,6 +4,7 @@ import (
 	"github.com/amirhnajafiz/flak-dashboard/include/cmd"
 	"github.com/amirhnajafiz/flak-dashboard/include/configs"
 	"github.com/amirhnajafiz/flak-dashboard/include/logging"
+	"github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
 )
@@ -24,6 +25,6 @@ func main() {
 
 	// execute the requested command
 	if err := root.Execute(); err != nil {
-		panic(err)
+		logrus.WithField("error", err).Panic("failed to execute the command")
 	}
 }
